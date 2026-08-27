@@ -1,0 +1,13 @@
+The 10 Most Famous Physicists:
+1. Albert Einstein - Theory of general and special relativity, E=mc², photoelectric effect, Nobel Prize 1921
+2. Isaac Newton - Laws of motion, universal gravitation, calculus, reflecting telescope
+3. Niels Bohr - Bohr model of atom, complementarity principle, Nobel Prize 1922, quantum mechanics foundation
+4. Max Planck - Quantum theory, Planck's constant h, Nobel Prize 1918, "origin of quantum theory"
+5. Werner Heisenberg - Uncertainty principle, matrix mechanics, Nobel Prize 1932
+6. Richard Feynman - Quantum electrodynamics, Feynman diagrams, Nobel Prize 1965, "teacher's teacher"
+7. Erwin Schrödinger - Wave equation, Schrödinger's cat thought experiment, Nobel Prize 1933
+8. James Clerk Maxwell - Maxwell's equations unifying electricity, magnetism, and light
+9. Galileo Galilei - Kinematics, telescopic astronomy, improved telescope, scientific method pioneer
+10. Stephen Hawking - Black hole thermodynamics, Hawking radiation, popular science communicator
+
+Key Contributions: Einstein's relativity redefined space and time; Bohr's atom model explained atomic structure; Feynman's diagrams simplified QED calculations.

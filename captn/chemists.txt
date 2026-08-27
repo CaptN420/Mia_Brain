@@ -1,0 +1,13 @@
+The 10 Most Famous Chemists:
+1. Dmitri Mendeleev - Created the Periodic Table of Elements in 1869, predicted elements yet undiscovered
+2. Antoine Lavoisier - "Father of modern chemistry," discovered oxygen's role in combustion, law of conservation of mass
+3. John Dalton - Developed atomic theory, laws of partial pressures, color blindness research
+4. Robert Boyle - Boyle's law (pressure-volume relationship), chemistry as quantitative experimental science
+5. Linus Pauling - Chemical bond theory, electronegativity scale, peace activism, two Nobel Prizes
+6. Marie Curie - Radioactivity research (coined the term), Nobel Prizes in Physics (1903) and Chemistry (1911)
+7. Amedeo Avogadro - Avogadro's law (equal volumes of gases have equal molecules), Avogadro's number (6.022×10²³)
+8. Ernest Rutherford - Nuclear model of atom, gold foil experiment, "father of nuclear physics"
+9. J.J. Thomson - Discovery of the electron using cathode ray tubes, first subatomic particle identification
+10. Niels Bohr - Bohr model of atom, complementarity principle, Nobel Prize 1922, quantum atomic structure
+
+Chemistry Milestones: Mendeleev's periodic table organized elements by properties and predicted new elements; Rutherford's nuclear model revolutionized atomic understanding.

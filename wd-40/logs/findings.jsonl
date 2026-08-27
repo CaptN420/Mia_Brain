@@ -1,0 +1,11 @@
+{"ts": "2026-08-27T06:06:22.244716+00:00", "type": "weird", "detail": "NEW on network: [6048] ollama.exe  <-- UNFAMILIAR"}
+{"ts": "2026-08-27T06:06:22.244801+00:00", "type": "weird", "detail": "NEW on network: [7992] python.exe  <-- UNFAMILIAR"}
+{"ts": "2026-08-27T06:06:22.244830+00:00", "type": "weird", "detail": "NEW on network: [8616] msedge.exe  <-- UNFAMILIAR"}
+{"ts": "2026-08-27T06:06:22.244847+00:00", "type": "weird", "detail": "NEW on network: [11372] msedgewebview2.exe  <-- UNFAMILIAR"}
+{"ts": "2026-08-27T06:06:22.244861+00:00", "type": "weird", "detail": "NEW on network: [12000] python.exe  <-- UNFAMILIAR"}
+{"ts": "2026-08-27T06:06:22.244873+00:00", "type": "weird", "detail": "NEW on network: [12116] StartMenuExperienceHost.exe  <-- UNFAMILIAR"}
+{"ts": "2026-08-27T06:06:22.244885+00:00", "type": "weird", "detail": "NEW on network: [12160] msedgewebview2.exe  <-- UNFAMILIAR"}
+{"ts": "2026-08-27T06:06:22.244911+00:00", "type": "weird", "detail": "NEW on network: [12180] SearchHost.exe  <-- UNFAMILIAR"}
+{"ts": "2026-08-27T06:06:22.244920+00:00", "type": "weird", "detail": "NEW on network: [12196] Hermes.exe  <-- UNFAMILIAR"}
+{"ts": "2026-08-27T06:06:22.244929+00:00", "type": "weird", "detail": "NEW on network: [13136] Hermes.exe  <-- UNFAMILIAR"}
+{"ts": "2026-08-27T06:06:22.244937+00:00", "type": "weird", "detail": "NEW on network: [13816] ollama app.exe  <-- UNFAMILIAR"}

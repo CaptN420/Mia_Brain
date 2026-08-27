@@ -1,0 +1,4 @@
+requests>=2.31.0
+
+# wxPython is provided by the system package python3-wxgtk4.0 (v4.0.7).
+# Do not install via pip to avoid source compilation issues.

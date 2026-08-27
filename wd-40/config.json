@@ -1,0 +1,7 @@
+{
+  "_comment": "wd-40 shield options. Edit and RESTART the shield to apply.",
+  "autorespond_enabled": false,
+  "_autorespond_note": "Set true to enable autonomous containment (firewall block + quarantine on CONFIRMED hits, weird=contain-only). REQUIRES the shield to run ELEVATED (admin). Kill-protection blocklist in autorespond.py is ALWAYS enforced.",
+  "firewall_contain": true,
+  "_firewall_note": "If false, autorespond logs + findings but never touches the firewall."
+}

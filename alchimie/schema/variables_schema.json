@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["name", "definition", "unit", "measure", "role", "status", "family"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the variable"
+    },
+    "definition": {
+      "type": "string",
+      "description": "Definition of the variable"
+    },
+    "unit": {
+      "type": "string",
+      "description": "Unit of measurement for the variable"
+    },
+    "measure": {
+      "type": "string",
+      "description": "Method of measurement for the variable"
+    },
+    "role": {
+      "type": "string",
+      "description": "Causal role or effect of the variable"
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Causal links or relationships involving the variable"
+    },
+    "remarks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Additional remarks or notes about the variable"
+    },
+    "approved": {
+      "type": "boolean",
+      "description": "Whether the variable is approved"
+    },
+    "source_turn": {
+      "type": "integer",
+      "description": "Source turn of the variable"
+    },
+    "source_agent": {
+      "type": "string",
+      "description": "Source agent that proposed the variable"
+    },
+    "validation_summary": {
+      "type": "string",
+      "description": "Summary of the variable validation"
+    },
+    "required_next": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Required next steps for the variable"
+    },
+    "family": {
+      "type": "string",
+      "description": "Family or category of the variable"
+    },
+    "micro_equation": {
+      "type": "string",
+      "description": "Micro-equation associated with the variable"
+    },
+    "experiment": {
+      "type": "string",
+      "description": "Experiment associated with the variable"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["approved", "candidate", "experimental", "hypothesis", "deprecated", "rejected"],
+      "description": "Validation status of the variable"
+    }
+  }
+}

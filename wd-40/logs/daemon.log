@@ -1,0 +1,78 @@
+[daemon] wd-40 scanner loop start 2026-08-27T03:59:37.903592+00:00 interval=300s
+[daemon] tick clean @ 2026-08-27T03:59:40.087267+00:00
+[daemon] tick clean @ 2026-08-27T04:04:42.675275+00:00
+[daemon] tick clean @ 2026-08-27T04:09:45.061337+00:00
+[daemon] tick clean @ 2026-08-27T04:14:47.432886+00:00
+[daemon] wd-40 scanner loop start 2026-08-27T04:20:16.587997+00:00 interval=300s
+[daemon] tick clean @ 2026-08-27T04:20:18.844435+00:00
+[daemon] wd-40 scanner loop start 2026-08-27T04:22:03.016964+00:00 interval=300s
+[daemon] tick clean @ 2026-08-27T04:22:05.215484+00:00
+[daemon] wd-40 scanner loop start 2026-08-27T04:23:47.875445+00:00 interval=300s
+[daemon] tick clean @ 2026-08-27T04:23:49.830717+00:00
+[daemon] wd-40 scanner loop start 2026-08-27T04:25:39.063177+00:00 interval=300s
+[daemon] tick clean @ 2026-08-27T04:25:39.947848+00:00
+[daemon] tick clean @ 2026-08-27T04:30:40.846614+00:00
+[daemon] stop flag seen — exiting 2026-08-27T04:30:55.849701+00:00
+[daemon] wd-40 scanner loop start 2026-08-27T04:31:37.041329+00:00 interval=150s
+[daemon] tick clean @ 2026-08-27T04:31:37.798025+00:00
+[daemon] tick clean @ 2026-08-27T04:34:08.724897+00:00
+[daemon] tick clean @ 2026-08-27T04:36:41.807367+00:00
+[daemon] wd-40 scanner single pass start 2026-08-27T04:37:00.479846+00:00 interval=300s
+[daemon] tick clean @ 2026-08-27T04:37:01.498757+00:00
+[daemon] wd-40 scanner loop start 2026-08-27T04:37:50.894988+00:00 interval=300s
+[notify] (toast unavailable) wd-40 Shield: Active — scanning every 300s
+[daemon] tick clean @ 2026-08-27T04:37:52.042011+00:00
+[daemon] tick clean @ 2026-08-27T04:39:12.600553+00:00
+[daemon] tick clean @ 2026-08-27T04:41:43.435632+00:00
+[daemon] tick clean @ 2026-08-27T04:42:52.949817+00:00
+[daemon] wd-40 scanner loop start 2026-08-27T04:43:05.880889+00:00 interval=300s
+[notify] (toast unavailable) wd-40 Shield: Active — scanning every 300s
+[daemon] tick clean @ 2026-08-27T04:43:06.965743+00:00
+[daemon] wd-40 scanner loop start 2026-08-27T04:43:42.962286+00:00 interval=300s
+[notify] (toast unavailable) wd-40 Shield: Active — scanning every 300s
+[daemon] tick clean @ 2026-08-27T04:43:44.021761+00:00
+[daemon] tick clean @ 2026-08-27T04:44:14.178574+00:00
+[notify] (toast unavailable) wd-40 TEST: notifications work
+[daemon] tick clean @ 2026-08-27T04:46:44.952259+00:00
+[daemon] stop flag seen â€” exiting 2026-08-27T04:47:01.999491+00:00
+[daemon] stop flag seen â€” exiting 2026-08-27T04:47:09.956963+00:00
+[daemon] wd-40 scanner loop start 2026-08-27T04:47:52.409140+00:00 interval=300s
+[notify] (toast unavailable) wd-40 Shield: Active — scanning every 300s
+[daemon] tick clean @ 2026-08-27T04:47:53.597997+00:00
+[daemon] tick clean @ 2026-08-27T04:47:53.814719+00:00
+[daemon] tick clean @ 2026-08-27T04:48:44.745995+00:00
+[daemon] tick clean @ 2026-08-27T04:52:54.513594+00:00
+[daemon] tick clean @ 2026-08-27T04:52:54.679887+00:00
+[daemon] tick clean @ 2026-08-27T04:53:45.498915+00:00
+[daemon] stop flag seen â€” exiting 2026-08-27T04:55:49.534327+00:00
+[daemon] stop flag seen â€” exiting 2026-08-27T04:56:45.517439+00:00
+[daemon] tick clean @ 2026-08-27T04:57:55.460420+00:00
+[daemon] wd-40 scanner loop start 2026-08-27T05:03:51.683110+00:00 interval=300s
+[notify] (toast unavailable) wd-40 Shield: Active — scanning every 300s
+[daemon] tick clean @ 2026-08-27T05:03:53.675662+00:00
+[daemon] tick clean @ 2026-08-27T05:08:55.478718+00:00
+[daemon] tick clean @ 2026-08-27T05:13:56.326906+00:00
+[daemon] tick clean @ 2026-08-27T05:18:57.151710+00:00
+[daemon] tick clean @ 2026-08-27T05:23:57.917611+00:00
+[daemon] tick clean @ 2026-08-27T05:28:58.697171+00:00
+[daemon] tick clean @ 2026-08-27T05:33:59.507028+00:00
+[daemon] tick clean @ 2026-08-27T05:39:01.362727+00:00
+[daemon] tick clean @ 2026-08-27T05:44:02.300359+00:00
+[daemon] tick clean @ 2026-08-27T05:49:03.097980+00:00
+[daemon] tick clean @ 2026-08-27T05:54:03.878828+00:00
+[daemon] tick clean @ 2026-08-27T05:59:04.622996+00:00
+[daemon] wd-40 scanner loop start 2026-08-27T06:06:20.007721+00:00 interval=300s
+[notify] (toast unavailable) wd-40 Shield: Active — scanning every 300s
+[daemon] FINDING [weird] NEW on network: [6048] ollama.exe  <-- UNFAMILIAR
+[daemon] FINDING [weird] NEW on network: [7992] python.exe  <-- UNFAMILIAR
+[daemon] FINDING [weird] NEW on network: [8616] msedge.exe  <-- UNFAMILIAR
+[daemon] FINDING [weird] NEW on network: [11372] msedgewebview2.exe  <-- UNFAMILIAR
+[daemon] FINDING [weird] NEW on network: [12000] python.exe  <-- UNFAMILIAR
+[daemon] FINDING [weird] NEW on network: [12116] StartMenuExperienceHost.exe  <-- UNFAMILIAR
+[daemon] FINDING [weird] NEW on network: [12160] msedgewebview2.exe  <-- UNFAMILIAR
+[daemon] FINDING [weird] NEW on network: [12180] SearchHost.exe  <-- UNFAMILIAR
+[daemon] FINDING [weird] NEW on network: [12196] Hermes.exe  <-- UNFAMILIAR
+[daemon] FINDING [weird] NEW on network: [13136] Hermes.exe  <-- UNFAMILIAR
+[daemon] FINDING [weird] NEW on network: [13816] ollama app.exe  <-- UNFAMILIAR
+[notify] (toast unavailable) wd-40 Shield ALERT: 11 finding(s): NEW on network: [6048] ollama.exe  <-- UNFAMILIAR
+[daemon] tick clean @ 2026-08-27T06:11:24.472305+00:00

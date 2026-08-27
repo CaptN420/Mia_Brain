@@ -1,0 +1,143 @@
+{
+  "library_version": "1.0.0",
+  "rules": [
+    {
+      "id": "variable.tau_eff.v1",
+      "name": "\u03c4_eff",
+      "type": "transformation",
+      "domain": "temps caracteristique",
+      "definition": "Temps de diffusion effective d'une particule dans un milieu",
+      "unit": "s",
+      "measure": "Mesure du temps de diffusion d'une particule dans un milieu",
+      "role": "Augmente ou diminue la concentration d'une particule en fonction de la dur\u00e9e de diffusion",
+      "links": [
+        "\u03c4_eff augmente la concentration de particules en augmentant la dur\u00e9e de diffusion."
+      ],
+      "status": "validated",
+      "experimental": false,
+      "version": "1.0.0",
+      "source": "alchimie",
+      "description": "Reflection of x around center c.",
+      "constraints": [],
+      "validation": {
+        "tested": true,
+        "tests": []
+      },
+      "family": "temps caracteristique",
+      "micro_equation": "",
+      "experiment": "",
+      "approved": true,
+      "source_turn": 1,
+      "source_agent": "Hermes",
+      "validation_summary": "Variable : \u03c4_eff\nFamille : diffusivit\u00e9\nD\u00e9finition :  Temps de diffusion effective d'une substance dans un milieu\nUnit\u00e9 : s\nMesure :  Mesure de la dur\u00e9e de diffusion d'une substance\nR\u00f4le causal :  \u03c4_eff repr\u00e9sente la dur\u00e9e de diffusion d'une substance dans un milieu et est li\u00e9e \u00e0 la diffusivit\u00e9 effective D_eff."
+    },
+    {
+      "id": "variable.k_eff.v1",
+      "name": "k_eff",
+      "type": "transformation",
+      "domain": "cinetique",
+      "definition": "Constante cin\u00e9tique effective gouvernant la vitesse apparente d'un processus local mesurable.",
+      "unit": "s\u207b\u00b9",
+      "measure": "Mesure par ajustement cin\u00e9tique sur s\u00e9rie temporelle exp\u00e9rimentale.",
+      "role": "k_eff contr\u00f4le la rapidit\u00e9 apparente de transformation ou d'\u00e9volution du syst\u00e8me.",
+      "links": [
+        "k_eff augmente la vitesse apparente du processus.",
+        "k_eff diminue le temps n\u00e9cessaire pour observer une conversion donn\u00e9e."
+      ],
+      "status": "validated",
+      "experimental": false,
+      "version": "1.0.0",
+      "source": "alchimie",
+      "description": "Constante cin\u00e9tique effective",
+      "constraints": [],
+      "validation": {
+        "tested": true,
+        "tests": []
+      },
+      "family": "cinetique",
+      "micro_equation": "",
+      "experiment": "",
+      "approved": true,
+      "source_turn": 5,
+      "source_agent": "Hermes",
+      "validation_summary": "Variable : k_eff\nFamille : diffusivit\u00e9\nD\u00e9finition : Coefficient de transfert de la mati\u00e8re entre deux phases ou milieux.\nUnit\u00e9 : m\u00b2/s\nMesure : Mesure de la diffusivit\u00e9 effective de la mati\u00e8re dans un milieu donn\u00e9.\nR\u00f4le causal : Diminue la concentration de la mati\u00e8re en augmentant la diffusion.\nLiens :\n-  k_eff diminue la concentration de la mati\u00e8re en augmentant la diffusion."
+    },
+    {
+      "id": "variable.tau_surf.v1",
+      "name": "\u03c4_surf",
+      "type": "transformation",
+      "domain": "temps caracteristique",
+      "definition": "Temps de diffusion de la mati\u00e8re sur une surface",
+      "unit": "s",
+      "measure": "Mesure de la dur\u00e9e de diffusion sur une surface",
+      "role": "Augmente ou diminue la dur\u00e9e de diffusion de la mati\u00e8re sur une surface",
+      "links": [
+        "\u03c4_surf augmente la dur\u00e9e de diffusion de la mati\u00e8re sur une surface."
+      ],
+      "status": "validated",
+      "experimental": false,
+      "version": "1.0.0",
+      "source": "alchimie",
+      "description": "Temps de diffusion sur surface",
+      "constraints": [],
+      "validation": {
+        "tested": true,
+        "tests": []
+      },
+      "family": "temps caracteristique",
+      "micro_equation": "",
+      "experiment": "",
+      "approved": true,
+      "source_turn": 2,
+      "source_agent": "Hermes",
+      "validation_summary": "Variable : \u03c4_surf\nFamille : diffusivit\u00e9\nD\u00e9finition :  Temps de diffusion de la mati\u00e8re sur une surface\nUnit\u00e9 : s\nMesure :  Mesure du temps de diffusion de la mati\u00e8re sur une surface\nR\u00f4le causal :  La variable \u03c4_surf repr\u00e9sente le temps n\u00e9cessaire pour que la mati\u00e8re diffuse sur une surface donn\u00e9e.\nLiens :\n-  \u03c4_surf  d\u00e9pend de la diffusivit\u00e9 D et de la surface A."
+    },
+    {
+      "id": "variable.s_eff.v1",
+      "name": "S_eff",
+      "type": "transformation",
+      "domain": "structure",
+      "definition": "Surface active de l'interface",
+      "unit": "m\u00b2",
+      "measure": "Mesure de la surface active de l'interface",
+      "role": "Augmente ou diminue la surface active d'\u00e9change",
+      "links": [
+        "S_eff augmente la surface active d'\u00e9change."
+      ],
+      "status": "candidate",
+      "experimental": true,
+      "version": "1.0.0",
+      "source": "alchimie",
+      "description": "Surface active de l'interface",
+      "constraints": [],
+      "validation": {
+        "tested": false,
+        "tests": []
+      },
+      "family": "structure",
+      "micro_equation": "",
+      "experiment": "",
+      "approved": false,
+      "source_turn": 3,
+      "source_agent": "Hermes",
+      "validation_summary": "Variable : S_eff\nFamille : structure\nD\u00e9finition : Surface active de l'interface\nUnit\u00e9 : m\u00b2\nMesure : Mesure de la surface active de l'interface\nR\u00f4le causal : S_eff repr\u00e9sente la surface active de l'interface et est li\u00e9e \u00e0 la surface d'\u00e9change."
+    }
+  ],
+  "transformations": [],
+  "domains": [
+    "mathematics",
+    "diffusivit\u00e9",
+    "temps caracteristique",
+    "cinetique",
+    "structure",
+    "flux",
+    "surface",
+    "extended_experimental"
+  ],
+  "metadata": {
+    "library_version": "1.0.0",
+    "created": "2026-08-15",
+    "source": "JEFF_MEMORIES initial import",
+    "description": "Initial Alchimie library initialized with approved variables and domains from JEFF_MEMORIES"
+  }
+}

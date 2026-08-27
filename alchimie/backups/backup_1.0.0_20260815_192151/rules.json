@@ -1,0 +1,112 @@
+{
+  "library_version": "1.0.0",
+  "rules": [
+    {
+      "id": "variable.tau_eff.v1",
+      "name": "τ_eff",
+      "type": "transformation",
+      "domain": "temps caracteristique",
+      "definition": "Temps de diffusion effective d'une particule dans un milieu",
+      "unit": "s",
+      "measure": "Mesure du temps de diffusion d'une particule dans un milieu",
+      "role": "Augmente ou diminue la concentration d'une particule en fonction de la durée de diffusion",
+      "links": [
+        "τ_eff augmente la concentration de particules en augmentant la durée de diffusion."
+      ],
+      "status": "validated",
+      "experimental": false,
+      "version": "1.0.0",
+      "source": "alchimie",
+      "description": "Reflection of x around center c.",
+      "constraints": [],
+      "validation": {
+        "tested": true,
+        "tests": []
+      },
+      "family": "temps caracteristique",
+      "micro_equation": "",
+      "experiment": "",
+      "approved": true,
+      "source_turn": 1,
+      "source_agent": "Hermes",
+      "validation_summary": "Variable : τ_eff\nFamille : diffusivité\nDéfinition :  Temps de diffusion effective d'une substance dans un milieu\nUnité : s\nMesure :  Mesure de la durée de diffusion d'une substance\nRôle causal :  τ_eff représente la durée de diffusion d'une substance dans un milieu et est liée à la diffusivité effective D_eff."
+    },
+    {
+      "id": "variable.k_eff.v1",
+      "name": "k_eff",
+      "type": "transformation",
+      "domain": "cinetique",
+      "definition": "Constante cinétique effective gouvernant la vitesse apparente d'un processus local mesurable.",
+      "unit": "s⁻¹",
+      "measure": "Mesure par ajustement cinétique sur série temporelle expérimentale.",
+      "role": "k_eff contrôle la rapidité apparente de transformation ou d'évolution du système.",
+      "links": [
+        "k_eff augmente la vitesse apparente du processus.",
+        "k_eff diminue le temps nécessaire pour observer une conversion donnée."
+      ],
+      "status": "validated",
+      "experimental": false,
+      "version": "1.0.0",
+      "source": "alchimie",
+      "description": "Constante cinétique effective",
+      "constraints": [],
+      "validation": {
+        "tested": true,
+        "tests": []
+      },
+      "family": "cinetique",
+      "micro_equation": "",
+      "experiment": "",
+      "approved": true,
+      "source_turn": 5,
+      "source_agent": "Hermes",
+      "validation_summary": "Variable : k_eff\nFamille : diffusivité\nDéfinition : Coefficient de transfert de la matière entre deux phases ou milieux.\nUnité : m²/s\nMesure : Mesure de la diffusivité effective de la matière dans un milieu donné.\nRôle causal : Diminue la concentration de la matière en augmentant la diffusion.\nLiens :\n-  k_eff diminue la concentration de la matière en augmentant la diffusion."
+    },
+    {
+      "id": "variable.tau_surf.v1",
+      "name": "τ_surf",
+      "type": "transformation",
+      "domain": "temps caracteristique",
+      "definition": "Temps de diffusion de la matière sur une surface",
+      "unit": "s",
+      "measure": "Mesure de la durée de diffusion sur une surface",
+      "role": "Augmente ou diminue la durée de diffusion de la matière sur une surface",
+      "links": [
+        "τ_surf augmente la durée de diffusion de la matière sur une surface."
+      ],
+      "status": "validated",
+      "experimental": false,
+      "version": "1.0.0",
+      "source": "alchimie",
+      "description": "Temps de diffusion sur surface",
+      "constraints": [],
+      "validation": {
+        "tested": true,
+        "tests": []
+      },
+      "family": "temps caracteristique",
+      "micro_equation": "",
+      "experiment": "",
+      "approved": true,
+      "source_turn": 2,
+      "source_agent": "Hermes",
+      "validation_summary": "Variable : τ_surf\nFamille : diffusivité\nDéfinition :  Temps de diffusion de la matière sur une surface\nUnité : s\nMesure :  Mesure du temps de diffusion de la matière sur une surface\nRôle causal :  La variable τ_surf représente le temps nécessaire pour que la matière diffuse sur une surface donnée.\nLiens :\n-  τ_surf  dépend de la diffusivité D et de la surface A."
+    }
+  ],
+  "transformations": [],
+  "domains": [
+    "mathematics",
+    "diffusivité",
+    "temps caracteristique",
+    "cinetique",
+    "structure",
+    "flux",
+    "surface",
+    "extended_experimental"
+  ],
+  "metadata": {
+    "created": "2026-08-15",
+    "source": "JEFF_MEMORIES initial import",
+    "description": "Initial Alchimie library initialized with approved variables and domains from JEFF_MEMORIES"
+  }
+}

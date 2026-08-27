@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["id", "name", "type", "domain", "expression", "status", "version"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the transformation"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name of the transformation"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["transformation", "mapping", "conversion"],
+      "description": "Type of the transformation"
+    },
+    "domain": {
+      "type": "string",
+      "description": "Domain or family the transformation belongs to"
+    },
+    "expression": {
+      "type": "string",
+      "description": "Mathematical or logical expression of the transformation"
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Input parameters for the transformation"
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Output parameters from the transformation"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["validated", "experimental", "hypothesis", "deprecated", "rejected", "candidate"],
+      "description": "Validation status of the transformation"
+    },
+    "experimental": {
+      "type": "boolean",
+      "description": "Whether the transformation is experimental"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Semantic version of the transformation"
+    },
+    "source": {
+      "type": "string",
+      "description": "Source of the transformation (e.g., 'alchimie', 'hermes', 'manual')"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the transformation"
+    },
+    "parameters": {
+      "type": "object",
+      "description": "Parameters required for the transformation"
+    },
+    "validation": {
+      "type": "object",
+      "properties": {
+        "tested": {
+          "type": "boolean"
+        },
+        "tests": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

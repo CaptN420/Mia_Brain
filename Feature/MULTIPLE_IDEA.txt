@@ -1,0 +1,1543 @@
+# Captn — Agentic Cognitive Architecture
+
+## Implementation Roadmap & Development Prompt
+
+> **Purpose:** Transform Captn from a basic multi-agent framework into a modular, observable, self-evaluating agentic architecture.
+>
+> **Development principle:** Build incrementally. Do not rewrite the entire project at once. Preserve existing functionality whenever possible.
+
+---
+
+# 0. Core Vision
+
+The objective is to build an agentic system where the LLM is **one component inside a larger cognitive architecture**, rather than the entire architecture.
+
+The system should separate:
+
+* planning
+* task decomposition
+* execution
+* tool usage
+* memory
+* evaluation
+* criticism
+* replanning
+* synthesis
+* observability
+
+The architecture should allow individual components to be replaced, tested, benchmarked, and improved independently.
+
+### Core loop
+
+```text
+USER
+  ↓
+ORCHESTRATOR
+  ↓
+PLANNER
+  ↓
+TASK GRAPH
+  ↓
+WORKERS
+  ↓
+BLACKBOARD
+  ↓
+SECOND THINKER
+  ↓
+┌───────────────┐
+│               │
+APPROVE       REPLAN
+│               │
+↓               └────→ PLANNER
+SYNTHESIS
+  ↓
+MEMORY
+  ↓
+RESULT
+```
+
+---
+
+# 1. Architectural Principles
+
+* [ ] Keep components modular.
+* [ ] Avoid tightly coupling the LLM to execution.
+* [ ] Separate "deciding what to do" from "doing it".
+* [ ] Make agent state explicit.
+* [ ] Make important decisions observable.
+* [ ] Make executions replayable.
+* [ ] Treat workers as temporary execution resources.
+* [ ] Allow different models to be used for different roles.
+* [ ] Make memory accessible through explicit interfaces.
+* [ ] Make transformations deterministic whenever possible.
+* [ ] Never require an LLM for something that can be handled deterministically.
+* [ ] Preserve backward compatibility with existing Captn components where practical.
+
+---
+
+# 2. Orchestrator
+
+## Objective
+
+Create a central `Orchestrator` responsible for coordinating the entire execution lifecycle.
+
+The Orchestrator should **not perform every task itself**.
+
+It should coordinate specialized components.
+
+### Responsibilities
+
+* [ ] Receive user objectives.
+* [ ] Create an execution context.
+* [ ] Invoke the Planner.
+* [ ] Register the generated Task Graph.
+* [ ] Spawn or assign Workers.
+* [ ] Monitor Worker execution.
+* [ ] Collect artifacts.
+* [ ] Invoke the Second Thinker.
+* [ ] Handle APPROVE / REVISE / REPLAN / ABORT.
+* [ ] Invoke synthesis.
+* [ ] Persist the execution history.
+* [ ] Return the final result.
+
+### Suggested interface
+
+```python
+class Orchestrator:
+
+    async def run(self, objective: str) -> Result:
+        ...
+```
+
+The Orchestrator should operate primarily as a **state coordinator**, not as an intelligent worker.
+
+---
+
+# 3. Planner
+
+## Objective
+
+Create a dedicated Planner whose responsibility is to determine **what needs to happen**.
+
+The Planner should not execute tools directly.
+
+### Input
+
+```text
+User objective
+Relevant memory
+Available capabilities
+System constraints
+```
+
+### Output
+
+A structured `TaskPlan`.
+
+Example:
+
+```python
+TaskPlan(
+    objective="Analyze dataset",
+    tasks=[
+        Task(
+            id="T1",
+            type="research"
+        ),
+        Task(
+            id="T2",
+            type="analysis",
+            depends_on=["T1"]
+        ),
+        Task(
+            id="T3",
+            type="validation",
+            depends_on=["T2"]
+        )
+    ],
+    success_criteria=[
+        "All claims have evidence",
+        "No unresolved critical errors"
+    ]
+)
+```
+
+### Requirements
+
+* [ ] Implement structured task generation.
+* [ ] Support task dependencies.
+* [ ] Support parallel tasks.
+* [ ] Support sequential tasks.
+* [ ] Support conditional tasks.
+* [ ] Define success criteria.
+* [ ] Define task priority.
+* [ ] Define expected outputs.
+* [ ] Define required capabilities.
+* [ ] Allow replanning.
+
+---
+
+# 4. Task Graph
+
+Represent execution as a graph rather than a flat list.
+
+```text
+T1 ─────→ T2 ─────→ T4
+           │
+           ↓
+           T3
+```
+
+### Task properties
+
+Each task should support:
+
+```python
+Task(
+    id="T1",
+    objective="...",
+    type="research",
+    dependencies=[],
+    priority=5,
+    required_capabilities=[],
+    expected_output=None,
+    success_criteria=[],
+)
+```
+
+### Required features
+
+* [ ] DAG-style dependency support.
+* [ ] Parallel execution.
+* [ ] Dependency validation.
+* [ ] Failed-task propagation.
+* [ ] Task retry.
+* [ ] Task cancellation.
+* [ ] Dynamic task insertion.
+* [ ] Dynamic task removal.
+* [ ] Replanning support.
+* [ ] Task status tracking.
+
+---
+
+# 5. Workers
+
+Workers are specialized execution units.
+
+A Worker should not need to understand the entire system.
+
+Example worker types:
+
+```text
+ResearchWorker
+CodingWorker
+TestingWorker
+FileWorker
+BrowserWorker
+AnalysisWorker
+ValidationWorker
+```
+
+### Worker contract
+
+```python
+class Worker:
+
+    async def execute(
+        self,
+        task: Task,
+        context: ExecutionContext
+    ) -> Artifact:
+        ...
+```
+
+### Worker requirements
+
+* [ ] Workers receive explicit tasks.
+* [ ] Workers return structured artifacts.
+* [ ] Workers report errors.
+* [ ] Workers report confidence.
+* [ ] Workers report assumptions.
+* [ ] Workers report evidence.
+* [ ] Workers do not directly manipulate global state.
+* [ ] Workers communicate through controlled interfaces.
+
+---
+
+# 6. Dynamic Worker Creation
+
+Do not permanently create dozens of agents.
+
+Workers should be treated as temporary capabilities.
+
+Example:
+
+```text
+Complex objective
+       ↓
+Planner
+       ↓
+Required capabilities:
+       ├── Research
+       ├── Coding
+       ├── Testing
+       └── Validation
+       ↓
+Spawn Workers
+       ↓
+Execute
+       ↓
+Workers terminate
+```
+
+### Requirements
+
+* [ ] Capability registry.
+* [ ] Worker factory.
+* [ ] Dynamic Worker creation.
+* [ ] Worker lifecycle management.
+* [ ] Worker cleanup.
+* [ ] Worker resource limits.
+* [ ] Worker timeout handling.
+
+---
+
+# 7. Blackboard
+
+Implement a shared Blackboard for controlled inter-agent communication.
+
+Workers should not need direct knowledge of other Workers.
+
+```text
+                 BLACKBOARD
+                     │
+          ┌──────────┼──────────┐
+          ↓          ↓          ↓
+       Worker A   Worker B   Worker C
+          └──────────┼──────────┘
+                     ↓
+               Second Thinker
+```
+
+### Example
+
+```python
+blackboard.publish(
+    topic="research.result",
+    source="worker_03",
+    artifact=result
+)
+```
+
+### Requirements
+
+* [ ] Publish events.
+* [ ] Subscribe to topics.
+* [ ] Store artifacts.
+* [ ] Track artifact provenance.
+* [ ] Support versioning.
+* [ ] Prevent uncontrolled global mutation.
+* [ ] Allow the Thinker to inspect accumulated results.
+
+---
+
+# 8. Artifact System
+
+Every important output should become an explicit `Artifact`.
+
+Example:
+
+```python
+Artifact(
+    id="A42",
+    type="research_result",
+    data=result,
+    source="worker_03",
+    confidence=0.84,
+    evidence=[...],
+    assumptions=[...],
+    timestamp=...
+)
+```
+
+### Artifact metadata
+
+* [ ] ID
+* [ ] type
+* [ ] source
+* [ ] timestamp
+* [ ] confidence
+* [ ] evidence
+* [ ] assumptions
+* [ ] dependencies
+* [ ] provenance
+* [ ] validation status
+
+This allows the system to reason about **results**, rather than only strings.
+
+---
+
+# 9. Second Thinker
+
+## Objective
+
+Create a second reasoning component whose purpose is **evaluation rather than primary solution generation**.
+
+The Second Thinker should ask:
+
+> Is the current trajectory coherent, supported, aligned with the objective, and safe to continue?
+
+It should not simply regenerate the Worker answer.
+
+### Input
+
+```text
+Original objective
+Task Graph
+Worker artifacts
+Evidence
+Execution history
+Memory
+```
+
+### Output
+
+```python
+Critique(
+    coherence=0.91,
+    evidence=0.73,
+    goal_alignment=0.96,
+    risk=0.22,
+    confidence=0.84,
+    decision="APPROVE"
+)
+```
+
+### Supported decisions
+
+```text
+APPROVE
+REVISE
+REPLAN
+ABORT
+```
+
+### Requirements
+
+* [ ] Implement independent evaluation.
+* [ ] Evaluate evidence quality.
+* [ ] Evaluate objective alignment.
+* [ ] Evaluate internal consistency.
+* [ ] Detect missing information.
+* [ ] Detect contradictions.
+* [ ] Detect unsupported assumptions.
+* [ ] Detect high-risk actions.
+* [ ] Produce structured critique.
+* [ ] Produce a final decision.
+
+---
+
+# 10. Replanning
+
+If the Second Thinker rejects the current trajectory:
+
+```text
+EXECUTION
+   ↓
+CRITIQUE
+   ↓
+REPLAN
+   ↓
+NEW TASK GRAPH
+   ↓
+EXECUTION
+```
+
+The Planner should receive:
+
+```text
+Original objective
+Previous plan
+Failed tasks
+Critique
+New information
+Available artifacts
+```
+
+### Requirements
+
+* [ ] Preserve previous execution history.
+* [ ] Explain why replanning occurred.
+* [ ] Avoid repeating known failures.
+* [ ] Modify only the necessary parts of the Task Graph.
+* [ ] Maintain successful previous results when valid.
+
+---
+
+# 11. Memory Architecture
+
+Implement three distinct memory layers.
+
+## 11.1 Working Memory
+
+Current execution context.
+
+```text
+current objective
+current plan
+active tasks
+recent artifacts
+current errors
+current decisions
+```
+
+* [ ] Implement scoped Working Memory.
+* [ ] Automatically clear it after execution when appropriate.
+
+---
+
+## 11.2 Episodic Memory
+
+Stores previous experiences.
+
+Example:
+
+```text
+Task X
+→ strategy A
+→ failed
+→ strategy B
+→ succeeded
+```
+
+Store:
+
+* [ ] Previous tasks.
+* [ ] Strategies.
+* [ ] Failures.
+* [ ] Successful approaches.
+* [ ] Execution duration.
+* [ ] Relevant context.
+* [ ] Outcomes.
+
+---
+
+## 11.3 Semantic Memory
+
+Long-term knowledge.
+
+Examples:
+
+```text
+Python patterns
+Linux commands
+project architecture
+known rules
+known concepts
+```
+
+* [ ] Implement explicit semantic retrieval.
+* [ ] Separate factual knowledge from execution history.
+
+---
+
+# 12. Decision Memory
+
+Create a dedicated memory type for important decisions.
+
+```python
+Decision(
+    context="How should this dataset be parsed?",
+    options=[
+        "regex",
+        "parser",
+        "LLM"
+    ],
+    chosen="parser",
+    reason="More deterministic",
+    confidence=0.87,
+    outcome=None
+)
+```
+
+### Requirements
+
+* [ ] Store decisions.
+* [ ] Store alternatives.
+* [ ] Store reasoning summary.
+* [ ] Store confidence.
+* [ ] Store outcome.
+* [ ] Link decisions to execution runs.
+* [ ] Retrieve similar previous decisions.
+* [ ] Use successful historical strategies when appropriate.
+* [ ] Avoid repeating strategies associated with known failures.
+
+---
+
+# 13. Alchemy Transformation Engine
+
+Integrate the Alchemy library as a **deterministic transformation layer**.
+
+The objective is not to make Alchemy another LLM.
+
+Alchemy should provide:
+
+```text
+Rules
+Transformations
+Patterns
+Validators
+Schemas
+Heuristics
+```
+
+### Example
+
+```python
+Transformation(
+    name="decompose_problem",
+    input="complex_task",
+    output="task_graph",
+    preconditions=[...],
+    postconditions=[...]
+)
+```
+
+### Transformation pipeline
+
+```text
+STATE
+ ↓
+PATTERN DETECTION
+ ↓
+TRANSFORMATION
+ ↓
+VALIDATION
+ ↓
+NEW STATE
+```
+
+### Requirements
+
+* [ ] Define a standard Transformation interface.
+* [ ] Define rule schemas.
+* [ ] Define preconditions.
+* [ ] Define postconditions.
+* [ ] Define validators.
+* [ ] Add transformation registry.
+* [ ] Allow versioned rules.
+* [ ] Add rule provenance.
+* [ ] Allow new rules to be loaded from a `new_data` directory.
+* [ ] Validate new rules before activation.
+* [ ] Provide a safe rollback mechanism.
+
+---
+
+# 14. Alchemy Update Pipeline
+
+Create a controlled update mechanism.
+
+Suggested structure:
+
+```text
+alchemy/
+├── rules/
+├── transformations/
+├── validators/
+├── patterns/
+├── schemas/
+├── new_data/
+└── archive/
+```
+
+New files can be placed into:
+
+```text
+alchemy/new_data/
+```
+
+Then an update command processes them.
+
+Example:
+
+```bash
+python tools/update_alchemy.py
+```
+
+Pipeline:
+
+```text
+new_data
+   ↓
+DISCOVER
+   ↓
+PARSE
+   ↓
+VALIDATE
+   ↓
+NORMALIZE
+   ↓
+TEST
+   ↓
+REGISTER
+   ↓
+ARCHIVE
+```
+
+### Requirements
+
+* [ ] Detect new files.
+* [ ] Validate file format.
+* [ ] Detect duplicates.
+* [ ] Normalize content.
+* [ ] Run rule tests.
+* [ ] Reject invalid rules.
+* [ ] Register valid rules.
+* [ ] Generate update report.
+* [ ] Preserve previous versions.
+* [ ] Support rollback.
+
+---
+
+# 15. Agent State Machine
+
+Create explicit system states.
+
+```python
+class AgentState(Enum):
+
+    IDLE = ...
+    ANALYZING = ...
+    PLANNING = ...
+    EXECUTING = ...
+    CRITIQUING = ...
+    REPLANNING = ...
+    SYNTHESIZING = ...
+    COMPLETE = ...
+    FAILED = ...
+```
+
+### State transitions
+
+```text
+IDLE
+ ↓
+ANALYZING
+ ↓
+PLANNING
+ ↓
+EXECUTING
+ ↓
+CRITIQUING
+ ↓
+ ┌───────────────┐
+ ↓               ↓
+APPROVE        REPLAN
+ ↓               ↓
+SYNTHESIS      PLANNING
+ ↓
+COMPLETE
+```
+
+### Requirements
+
+* [ ] Central state manager.
+* [ ] Validate legal transitions.
+* [ ] Record state changes.
+* [ ] Emit state events.
+* [ ] Recover from failures.
+* [ ] Prevent invalid transitions.
+
+---
+
+# 16. Confidence System
+
+Every significant artifact and decision should expose uncertainty.
+
+Example:
+
+```python
+Confidence(
+    value=0.82,
+    factors={
+        "evidence": 0.90,
+        "consistency": 0.78,
+        "source_quality": 0.85
+    }
+)
+```
+
+### Requirements
+
+* [ ] Worker confidence.
+* [ ] Artifact confidence.
+* [ ] Decision confidence.
+* [ ] Critique confidence.
+* [ ] Confidence aggregation.
+* [ ] Avoid treating confidence as absolute truth.
+
+Confidence should be treated as a **signal**, not proof.
+
+---
+
+# 17. Provenance
+
+Every important result should answer:
+
+```text
+Where did this come from?
+Who produced it?
+Which tools were used?
+Which inputs influenced it?
+Which transformations were applied?
+Which decisions depended on it?
+```
+
+Example:
+
+```text
+Artifact A42
+ ↓
+Worker 03
+ ↓
+Tool X
+ ↓
+Input B17
+ ↓
+Transformation T4
+```
+
+### Requirements
+
+* [ ] Artifact provenance.
+* [ ] Tool provenance.
+* [ ] Transformation provenance.
+* [ ] Decision provenance.
+* [ ] Execution provenance.
+
+---
+
+# 18. Event Log
+
+Every execution should generate an event stream.
+
+Example:
+
+```text
+RUN #184
+│
+├── OBJECTIVE_RECEIVED
+├── PLAN_CREATED
+├── TASK_CREATED
+├── WORKER_STARTED
+├── TOOL_CALLED
+├── ARTIFACT_CREATED
+├── WORKER_COMPLETED
+├── CRITIQUE_STARTED
+├── CRITIQUE_COMPLETED
+├── REPLAN_REQUESTED
+├── PLAN_UPDATED
+├── SYNTHESIS_STARTED
+└── RUN_COMPLETED
+```
+
+### Requirements
+
+* [ ] Unique run ID.
+* [ ] Unique event IDs.
+* [ ] Timestamp.
+* [ ] Component.
+* [ ] Event type.
+* [ ] Payload metadata.
+* [ ] Parent event.
+* [ ] Error information.
+
+---
+
+# 19. Replay System
+
+The system should be able to replay an execution.
+
+Example:
+
+```bash
+captn replay 184
+```
+
+Replay should reconstruct:
+
+* [ ] Task Graph.
+* [ ] Worker lifecycle.
+* [ ] Tool calls.
+* [ ] Artifacts.
+* [ ] Critiques.
+* [ ] Replans.
+* [ ] State transitions.
+* [ ] Final synthesis.
+
+The replay system is primarily for:
+
+* debugging
+* evaluation
+* research
+* reproducibility
+* benchmarking
+
+Do not attempt to reconstruct hidden/private model chain-of-thought.
+
+Replay should reconstruct **observable system events and outputs**.
+
+---
+
+# 20. Capability Registry
+
+Implement a registry describing what the system can do.
+
+Example:
+
+```python
+Capability(
+    name="python_execution",
+    worker_type="CodingWorker",
+    tools=["python"],
+    constraints=[...]
+)
+```
+
+The Planner can then reason about available capabilities.
+
+### Requirements
+
+* [ ] Register capabilities.
+* [ ] Discover capabilities.
+* [ ] Associate Workers with capabilities.
+* [ ] Associate tools with capabilities.
+* [ ] Define capability constraints.
+* [ ] Allow capabilities to be added dynamically.
+
+---
+
+# 21. Tool Layer
+
+Tools should remain separate from reasoning.
+
+```text
+REASONING
+    ↓
+WORKER
+    ↓
+TOOL INTERFACE
+    ↓
+TOOL
+```
+
+Never allow arbitrary LLM-generated code to automatically gain unrestricted access to the host system.
+
+Implement:
+
+* [ ] Tool registry.
+* [ ] Tool schemas.
+* [ ] Permission boundaries.
+* [ ] Input validation.
+* [ ] Output validation.
+* [ ] Timeout.
+* [ ] Error handling.
+* [ ] Audit logging.
+
+---
+
+# 22. Synthesis Layer
+
+After validation, a dedicated Synthesis step should transform validated artifacts into the final answer.
+
+```text
+Worker Results
+      ↓
+Validation
+      ↓
+Second Thinker
+      ↓
+Validated Artifacts
+      ↓
+SYNTHESIS
+      ↓
+Final Result
+```
+
+The Synthesizer should prioritize validated artifacts over speculative ones.
+
+---
+
+# 23. Observability UI
+
+Create a simple interface showing:
+
+```text
+RUN #184
+
+Objective
+─────────
+...
+
+Current State
+─────────────
+EXECUTING
+
+Task Graph
+──────────
+T1 ✓
+T2 ✓
+T3 ●
+T4 ○
+
+Workers
+───────
+ResearchWorker ✓
+CodingWorker ●
+Validator ○
+
+Second Thinker
+──────────────
+Waiting
+
+Memory
+──────
+Working: 12 artifacts
+Episodic: 842 entries
+Semantic: 12,431 entries
+```
+
+### Optional advanced visualization
+
+* [ ] Task Graph visualization.
+* [ ] Worker timeline.
+* [ ] Event timeline.
+* [ ] Artifact dependency graph.
+* [ ] Decision graph.
+* [ ] Memory inspection.
+* [ ] Replay interface.
+
+---
+
+# 24. Evaluation Framework
+
+The architecture should be measurable.
+
+Create benchmarks for:
+
+### Planning
+
+* [ ] Task decomposition accuracy.
+* [ ] Dependency correctness.
+* [ ] Planning efficiency.
+
+### Execution
+
+* [ ] Task success rate.
+* [ ] Tool success rate.
+* [ ] Retry rate.
+
+### Criticism
+
+* [ ] Error detection.
+* [ ] False-positive criticism.
+* [ ] Replanning quality.
+
+### Memory
+
+* [ ] Retrieval relevance.
+* [ ] Successful strategy reuse.
+* [ ] Failure avoidance.
+
+### Overall
+
+* [ ] Completion rate.
+* [ ] Cost.
+* [ ] Latency.
+* [ ] Number of model calls.
+* [ ] Number of tool calls.
+* [ ] Number of replans.
+
+---
+
+# 25. Model Independence
+
+Do not hard-code the architecture around one model provider.
+
+Support:
+
+```text
+Local LLM
+OpenRouter
+Ollama
+API models
+Future providers
+```
+
+Define interfaces:
+
+```python
+class LLMProvider:
+
+    async def generate(
+        self,
+        messages,
+        schema=None
+    ):
+        ...
+```
+
+Different components may use different models.
+
+Example:
+
+```text
+Planner       → strong reasoning model
+Workers       → inexpensive specialized model
+Second Thinker→ independent reasoning model
+Synthesizer   → high-quality language model
+```
+
+This should be configurable.
+
+---
+
+# 26. Configuration
+
+Create a central configuration layer.
+
+Example:
+
+```yaml
+planner:
+  model: ...
+
+workers:
+  max_parallel: 4
+
+thinker:
+  model: ...
+
+memory:
+  working: true
+  episodic: true
+  semantic: true
+
+alchemy:
+  enabled: true
+
+replay:
+  enabled: true
+
+security:
+  sandbox_tools: true
+```
+
+Avoid scattering configuration throughout the codebase.
+
+---
+
+# 27. Safety and Failure Handling
+
+The system should fail explicitly rather than silently.
+
+### Requirements
+
+* [ ] Timeouts.
+* [ ] Retry policies.
+* [ ] Maximum retry count.
+* [ ] Worker isolation.
+* [ ] Tool permission boundaries.
+* [ ] Input validation.
+* [ ] Output validation.
+* [ ] Resource limits.
+* [ ] Abort mechanism.
+* [ ] Recovery mechanism.
+
+Every failure should become an observable event.
+
+---
+
+# 28. Development Strategy
+
+Do not implement everything simultaneously.
+
+Implement in stages.
+
+---
+
+## Phase 1 — Core Execution Graph
+
+* [ ] `Task`
+* [ ] `TaskGraph`
+* [ ] `TaskPlan`
+* [ ] `Planner`
+* [ ] `Orchestrator`
+* [ ] basic Worker interface
+* [ ] explicit Agent State
+
+### Goal
+
+Successfully execute:
+
+```text
+Objective
+ ↓
+Plan
+ ↓
+Tasks
+ ↓
+Workers
+ ↓
+Result
+```
+
+---
+
+## Phase 2 — Second Thinker
+
+* [ ] Critique interface.
+* [ ] Confidence evaluation.
+* [ ] APPROVE.
+* [ ] REVISE.
+* [ ] REPLAN.
+* [ ] ABORT.
+
+### Goal
+
+Create the first genuine feedback loop:
+
+```text
+PLAN
+ ↓
+EXECUTE
+ ↓
+CRITIQUE
+ ↓
+REPLAN
+```
+
+---
+
+## Phase 3 — Blackboard + Artifacts
+
+* [ ] Blackboard.
+* [ ] Artifact model.
+* [ ] Provenance.
+* [ ] Worker communication.
+* [ ] Artifact validation.
+
+---
+
+## Phase 4 — Memory
+
+* [ ] Working Memory.
+* [ ] Episodic Memory.
+* [ ] Semantic Memory.
+* [ ] Decision Memory.
+* [ ] Retrieval interface.
+
+---
+
+## Phase 5 — Alchemy
+
+* [ ] Transformation interface.
+* [ ] Rule registry.
+* [ ] Validator.
+* [ ] `new_data`.
+* [ ] Update pipeline.
+* [ ] Versioning.
+* [ ] Rollback.
+
+---
+
+## Phase 6 — Observability
+
+* [ ] Event Log.
+* [ ] Run IDs.
+* [ ] State timeline.
+* [ ] Task visualization.
+* [ ] Artifact provenance.
+
+---
+
+## Phase 7 — Replay
+
+* [ ] Run persistence.
+* [ ] Event reconstruction.
+* [ ] Replay command.
+* [ ] Replay UI.
+
+---
+
+## Phase 8 — Benchmarking
+
+* [ ] Planning benchmarks.
+* [ ] Worker benchmarks.
+* [ ] Critic benchmarks.
+* [ ] Memory benchmarks.
+* [ ] End-to-end benchmarks.
+
+---
+
+# 29. Suggested Project Structure
+
+```text
+captn/
+│
+├── core/
+│   ├── orchestrator.py
+│   ├── state.py
+│   ├── execution.py
+│   └── context.py
+│
+├── planning/
+│   ├── planner.py
+│   ├── task.py
+│   ├── task_graph.py
+│   └── replanner.py
+│
+├── workers/
+│   ├── base.py
+│   ├── registry.py
+│   ├── research.py
+│   ├── coding.py
+│   ├── testing.py
+│   └── validation.py
+│
+├── thinking/
+│   ├── second_thinker.py
+│   ├── critique.py
+│   └── confidence.py
+│
+├── memory/
+│   ├── working.py
+│   ├── episodic.py
+│   ├── semantic.py
+│   └── decisions.py
+│
+├── blackboard/
+│   ├── board.py
+│   └── events.py
+│
+├── artifacts/
+│   ├── artifact.py
+│   └── provenance.py
+│
+├── alchemy/
+│   ├── rules/
+│   ├── transformations/
+│   ├── validators/
+│   ├── patterns/
+│   ├── schemas/
+│   ├── new_data/
+│   └── archive/
+│
+├── tools/
+│   ├── registry.py
+│   ├── permissions.py
+│   └── sandbox.py
+│
+├── observability/
+│   ├── event_log.py
+│   ├── replay.py
+│   └── telemetry.py
+│
+├── synthesis/
+│   └── synthesizer.py
+│
+├── evaluation/
+│   ├── benchmarks.py
+│   └── metrics.py
+│
+└── config/
+    └── config.yaml
+```
+
+Adapt this structure to the existing repository instead of blindly creating duplicate modules.
+
+---
+
+# 30. Non-Goals
+
+Do **not**:
+
+* [ ] Turn every component into an LLM agent.
+* [ ] Create unnecessary agent-to-agent conversations.
+* [ ] Hide execution state inside prompts.
+* [ ] Make memory one giant vector database.
+* [ ] Allow Workers to mutate global state arbitrarily.
+* [ ] Automatically trust Worker output.
+* [ ] Treat model confidence as factual certainty.
+* [ ] Rewrite the entire project unnecessarily.
+* [ ] Add complexity without an observable benefit.
+
+---
+
+# 31. Definition of Done
+
+The architecture should be considered functional when the following complete loop works:
+
+```text
+USER OBJECTIVE
+      ↓
+ORCHESTRATOR
+      ↓
+PLANNER
+      ↓
+TASK GRAPH
+      ↓
+WORKERS
+      ↓
+ARTIFACTS
+      ↓
+BLACKBOARD
+      ↓
+SECOND THINKER
+      ↓
+ ┌─────────────┐
+ │             │
+APPROVE      REPLAN
+ │             │
+ ↓             └────→ PLANNER
+SYNTHESIS
+ ↓
+FINAL RESULT
+ ↓
+MEMORY
+ ↓
+EVENT LOG
+```
+
+And the complete execution can be inspected afterward:
+
+```bash
+captn runs
+captn inspect <run_id>
+captn replay <run_id>
+```
+
+---
+
+# 32. Final Development Instruction
+
+Implement this architecture **incrementally**.
+
+Before modifying existing code:
+
+1. Inspect the current repository.
+2. Identify existing components that already provide part of this functionality.
+3. Reuse existing interfaces where possible.
+4. Avoid duplicate implementations.
+5. Create tests before major architectural changes.
+6. Implement one phase at a time.
+7. Run the existing test suite after each phase.
+8. Preserve backward compatibility unless a breaking change is explicitly justified.
+9. Document architectural decisions.
+10. Keep the system runnable after every meaningful change.
+
+For every implementation step, report:
+
+```text
+CHANGE
+------
+What was implemented?
+
+WHY
+---
+Why does this component exist?
+
+INTERFACE
+---------
+How does it communicate with the rest of Captn?
+
+TEST
+----
+How was it tested?
+
+NEXT
+----
+What should be implemented next?
+```
+
+The goal is not merely to create more agents.
+
+The goal is to create a **modular cognitive execution architecture** where planning, execution, criticism, memory, transformation, and synthesis are independent systems that cooperate through explicit state, artifacts, events, and interfaces.
+
+---
+
+# Implementation Checklist
+
+## Core
+
+* [ ] Orchestrator
+* [ ] Planner
+* [ ] Task
+* [ ] Task Graph
+* [ ] State Machine
+
+## Execution
+
+* [ ] Worker interface
+* [ ] Worker registry
+* [ ] Dynamic Workers
+* [ ] Tool interface
+
+## Cognition
+
+* [ ] Second Thinker
+* [ ] Critique
+* [ ] Confidence
+* [ ] Replanning
+* [ ] Synthesis
+
+## Knowledge
+
+* [ ] Working Memory
+* [ ] Episodic Memory
+* [ ] Semantic Memory
+* [ ] Decision Memory
+
+## Communication
+
+* [ ] Blackboard
+* [ ] Artifact system
+* [ ] Provenance
+
+## Alchemy
+
+* [ ] Rules
+* [ ] Transformations
+* [ ] Validators
+* [ ] Patterns
+* [ ] `new_data`
+* [ ] Update pipeline
+* [ ] Versioning
+* [ ] Rollback
+
+## Observability
+
+* [ ] Event Log
+* [ ] Run IDs
+* [ ] State timeline
+* [ ] Replay
+* [ ] Inspection UI
+
+## Research
+
+* [ ] Benchmarks
+* [ ] Metrics
+* [ ] Model comparison
+* [ ] Planning evaluation
+* [ ] Critic evaluation
+* [ ] Memory evaluation
+
+## Quality
+
+* [ ] Tests
+* [ ] Documentation
+* [ ] Error handling
+* [ ] Security boundaries
+* [ ] Resource limits
+* [ ] Backward compatibility
+

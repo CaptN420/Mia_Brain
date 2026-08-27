@@ -1,0 +1,1393 @@
+# HERMES — ALCHIMIE LIBRARY UPDATE / DATA MERGE SYSTEM
+
+## Objective
+
+Implement a dedicated **Alchimie Library Manager** for Hermes.
+
+Alchimie is the structured knowledge/rule layer used by Hermes to represent:
+
+* transformation rules;
+* mathematical transformations;
+* mirror operations;
+* symbolic relationships;
+* normalization rules;
+* experimental rules;
+* validation constraints;
+* transformation metadata;
+* domain-specific transformations.
+
+The important architectural principle is:
+
+```text
+Hermes = reasoning / orchestration
+
+Alchimie = structured transformation knowledge
+```
+
+Hermes should consume Alchimie rules, but the agent system should NOT directly modify the canonical Alchimie database.
+
+All library updates must pass through a controlled ingestion and merge pipeline.
+
+---
+
+# 1. Target architecture
+
+Implement:
+
+```text
+                    ┌─────────────────┐
+                    │   NEW DATA      │
+                    │                 │
+                    │ new_data/*.json │
+                    └────────┬────────┘
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │  DATA LOADER    │
+                    └────────┬────────┘
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │    VALIDATOR    │
+                    └────────┬────────┘
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │  NORMALIZER     │
+                    └────────┬────────┘
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │ DEDUPLICATOR    │
+                    └────────┬────────┘
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │ CONFLICT CHECK  │
+                    └────────┬────────┘
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │  MERGE ENGINE   │
+                    └────────┬────────┘
+                             │
+                             ▼
+                  ┌──────────────────────┐
+                  │ CANONICAL ALCHIMIE   │
+                  │      LIBRARY         │
+                  └──────────┬───────────┘
+                             │
+                             ▼
+                         HERMES
+```
+
+---
+
+# 2. New data directory
+
+Create a dedicated directory:
+
+```text
+alchimie/
+    library/
+        rules.json
+        transformations.json
+        domains.json
+        metadata.json
+
+    new_data/
+        incoming_001.json
+        incoming_002.json
+
+    archive/
+        ...
+
+    backups/
+        ...
+
+    schema/
+        rule_schema.json
+        transformation_schema.json
+```
+
+The exact organization may be adapted to the existing project.
+
+The important separation is:
+
+```text
+new_data/
+```
+
+must NEVER be considered part of the canonical active library until explicitly merged.
+
+---
+
+# 3. Canonical database
+
+The canonical library should contain validated data only.
+
+Example:
+
+```json
+{
+  "library_version": "1.0.0",
+  "rules": [],
+  "transformations": [],
+  "domains": [],
+  "metadata": {}
+}
+```
+
+Do not allow malformed or unvalidated records into the canonical database.
+
+---
+
+# 4. Rule representation
+
+Create a structured rule format.
+
+For example:
+
+```json
+{
+  "id": "mirror.linear.v1",
+  "name": "Linear Mirror",
+  "type": "transformation",
+  "domain": "mathematics",
+  "expression": "M(x,c)=2c-x",
+  "inputs": ["x", "center"],
+  "outputs": ["mirrored_x"],
+  "status": "validated",
+  "experimental": false,
+  "version": "1.0.0",
+  "source": "alchimie",
+  "description": "Reflection of x around center c.",
+  "constraints": [],
+  "validation": {
+    "tested": true,
+    "tests": []
+  }
+}
+```
+
+The schema must remain extensible.
+
+---
+
+# 5. Experimental rules
+
+Alchimie must explicitly distinguish between:
+
+```text
+VALIDATED
+EXPERIMENTAL
+HYPOTHESIS
+DEPRECATED
+REJECTED
+```
+
+For example:
+
+```json
+{
+  "id": "experimental.infinity.div12",
+  "type": "transformation",
+  "expression": "INF / 12 -> INF",
+  "domain": "extended_experimental",
+  "status": "experimental",
+  "experimental": true
+}
+```
+
+Hermes must never interpret:
+
+```text
+experimental = true
+```
+
+as established mathematical truth.
+
+The rule engine must know the distinction.
+
+---
+
+# 6. Transformation engine
+
+Create a dedicated component:
+
+```text
+AlchimieTransformer
+```
+
+Its responsibility is to apply rules from the library.
+
+Conceptually:
+
+```python
+result = alchimie.transform(
+    input_value,
+    rule_id="mirror.linear.v1"
+)
+```
+
+The transformation engine must return provenance.
+
+Example:
+
+```json
+{
+  "input": 8,
+  "rule": "mirror.linear.v1",
+  "parameters": {
+    "center": 6
+  },
+  "output": 4,
+  "status": "validated",
+  "rule_version": "1.0.0"
+}
+```
+
+This is important because Hermes must know:
+
+```text
+What transformation happened?
+Which rule caused it?
+Which version of the rule was used?
+```
+
+---
+
+# 7. Rules are data, not hard-coded logic
+
+Avoid putting every transformation directly into Python code.
+
+Prefer:
+
+```text
+JSON / structured data
+        ↓
+Alchimie Rule Engine
+        ↓
+Transformation
+```
+
+rather than:
+
+```python
+if rule == "mirror":
+    ...
+elif rule == "something":
+    ...
+```
+
+Python should implement the transformation engine and validation framework.
+
+The actual rule definitions should live in Alchimie.
+
+---
+
+# 8. UPDATE LIBRARY PYTHON SCRIPT
+
+Create a Python utility:
+
+```text
+tools/update_alchimie.py
+```
+
+or an appropriate location in the existing architecture.
+
+Its responsibility is to:
+
+```text
+scan new_data/
+validate files
+normalize records
+detect duplicates
+detect conflicts
+preview changes
+merge approved data
+create backup
+update library version
+archive merged files
+```
+
+It should support CLI usage:
+
+```bash
+python tools/update_alchimie.py validate
+```
+
+```bash
+python tools/update_alchimie.py preview
+```
+
+```bash
+python tools/update_alchimie.py merge
+```
+
+```bash
+python tools/update_alchimie.py status
+```
+
+```bash
+python tools/update_alchimie.py rollback
+```
+
+---
+
+# 9. GUI integration
+
+Add a Library Management panel to Hermes.
+
+Display:
+
+```text
+ALCHIMIE LIBRARY
+
+Version:
+1.4.2
+
+Rules:
+247
+
+Transformations:
+83
+
+Experimental:
+31
+
+Pending files:
+4
+```
+
+Buttons:
+
+```text
+[ Scan New Data ]
+
+[ Validate ]
+
+[ Preview Merge ]
+
+[ Merge Files ]
+
+[ Rollback ]
+
+[ Refresh Library ]
+```
+
+---
+
+# 10. Scan New Data
+
+When the user clicks:
+
+```text
+[ Scan New Data ]
+```
+
+Hermes scans:
+
+```text
+alchimie/new_data/
+```
+
+and reports:
+
+```text
+4 files found
+
+new_rules.json
+new_transformations.json
+experimental.json
+mirror_rules.json
+```
+
+Do not merge anything yet.
+
+---
+
+# 11. Validate
+
+The Validate button should check:
+
+```text
+JSON syntax
+schema
+required fields
+unique IDs
+valid types
+valid domains
+version format
+references
+dependencies
+expression syntax
+transformation compatibility
+```
+
+Report:
+
+```text
+✓ JSON valid
+✓ Schema valid
+✓ 27 records
+✓ 25 new
+⚠ 2 duplicates
+✗ 0 invalid
+```
+
+---
+
+# 12. Preview Merge
+
+This is extremely important.
+
+Before merging, show:
+
+```text
+MERGE PREVIEW
+
+New:
+    + 25 rules
+
+Updated:
+    ~ 4 rules
+
+Duplicates:
+    = 2
+
+Conflicts:
+    ! 1
+
+Rejected:
+    - 0
+```
+
+For each conflict:
+
+```text
+Rule:
+mirror.linear.v1
+
+Existing:
+version 1.0.0
+
+Incoming:
+version 1.1.0
+
+Difference:
+expression changed
+```
+
+The user must be able to inspect the conflict.
+
+---
+
+# 13. Merge behavior
+
+Do NOT simply overwrite records.
+
+Use deterministic rules.
+
+For example:
+
+```text
+NEW ID
+    → add
+
+SAME ID + SAME VERSION + SAME CONTENT
+    → duplicate / ignore
+
+SAME ID + NEWER VERSION
+    → candidate update
+
+SAME ID + DIFFERENT CONTENT + SAME VERSION
+    → conflict
+
+DEPRECATED RECORD
+    → preserve history
+```
+
+Never silently overwrite a canonical rule.
+
+---
+
+# 14. Merge File button
+
+The primary UI action should be:
+
+```text
+[ MERGE FILES ]
+```
+
+But it should perform:
+
+```text
+Scan
+ ↓
+Validate
+ ↓
+Normalize
+ ↓
+Deduplicate
+ ↓
+Conflict detection
+ ↓
+Preview
+ ↓
+User confirmation
+ ↓
+Backup
+ ↓
+Merge
+ ↓
+Post-merge validation
+ ↓
+Archive incoming files
+```
+
+Never:
+
+```text
+button
+ ↓
+append JSON
+```
+
+---
+
+# 15. Backup before merge
+
+Before modifying the canonical library:
+
+```text
+alchimie/backups/
+    library_2026-08-11_1430/
+```
+
+Store:
+
+```text
+previous library
+library metadata
+merge manifest
+timestamp
+source files
+```
+
+If the merge fails, restore the previous state.
+
+---
+
+# 16. Merge transaction
+
+The merge should behave like a transaction.
+
+Conceptually:
+
+```text
+BEGIN MERGE
+
+backup
+
+load canonical library
+
+load incoming data
+
+validate
+
+merge in memory
+
+validate resulting library
+
+write temporary library
+
+validate temporary library
+
+atomic replace
+
+COMMIT
+```
+
+If anything fails:
+
+```text
+ROLLBACK
+```
+
+The canonical library must never be left partially merged.
+
+---
+
+# 17. Atomic writes
+
+Never directly modify:
+
+```text
+rules.json
+```
+
+while the merge is running.
+
+Instead:
+
+```text
+rules.json.tmp
+```
+
+then validate it.
+
+Only after successful validation:
+
+```text
+rules.json.tmp
+      ↓
+atomic replace
+      ↓
+rules.json
+```
+
+This protects against crashes and interrupted merges.
+
+---
+
+# 18. Archive incoming files
+
+After a successful merge:
+
+```text
+new_data/
+    new_rules.json
+```
+
+should move to:
+
+```text
+archive/
+    2026-08-11/
+        new_rules.json
+```
+
+Do not delete the original data.
+
+The archive provides provenance.
+
+---
+
+# 19. Merge manifest
+
+Every merge should create:
+
+```text
+merge_manifest.json
+```
+
+Example:
+
+```json
+{
+  "merge_id": "merge-20260811-1430",
+  "library_before": "1.4.2",
+  "library_after": "1.5.0",
+  "files": [
+    "new_rules.json",
+    "mirror_rules.json"
+  ],
+  "added": 25,
+  "updated": 4,
+  "duplicates": 2,
+  "conflicts": 1,
+  "rejected": 0,
+  "timestamp": "..."
+}
+```
+
+---
+
+# 20. Library versioning
+
+Use semantic versioning where appropriate:
+
+```text
+MAJOR.MINOR.PATCH
+```
+
+For example:
+
+```text
+1.4.2
+→ 1.4.3
+```
+
+for metadata/fixes.
+
+```text
+1.4.2
+→ 1.5.0
+```
+
+for new compatible rules.
+
+```text
+1.4.2
+→ 2.0.0
+```
+
+only for breaking schema/behavior changes.
+
+---
+
+# 21. Rule versioning
+
+Rules should have their own versions.
+
+Example:
+
+```text
+mirror.linear.v1
+mirror.linear.v2
+```
+
+Do not silently change the mathematical meaning of:
+
+```text
+mirror.linear.v1
+```
+
+If its semantics change substantially, create a new version.
+
+This ensures old Hermes analyses remain reproducible.
+
+---
+
+# 22. Reproducibility
+
+Every Hermes analysis that uses Alchimie must record:
+
+```text
+alchimie_version
+rule_versions
+transformation_ids
+```
+
+Example:
+
+```json
+{
+  "alchimie_version": "1.5.0",
+  "rules_used": [
+    "mirror.linear.v1",
+    "normalize.vector.v2"
+  ]
+}
+```
+
+This allows Hermes to reproduce an old reasoning process.
+
+---
+
+# 23. Conflict resolution
+
+Do not allow the LLM to silently resolve library conflicts.
+
+If:
+
+```text
+existing rule
+```
+
+and:
+
+```text
+incoming rule
+```
+
+conflict, mark:
+
+```text
+CONFLICT_PENDING
+```
+
+The UI should show:
+
+```text
+[ Review Conflict ]
+```
+
+Possible decisions:
+
+```text
+KEEP EXISTING
+ACCEPT INCOMING
+KEEP BOTH AS VERSIONS
+REJECT INCOMING
+```
+
+The decision should be recorded.
+
+---
+
+# 24. LLM-assisted rule extraction
+
+Optionally create:
+
+```text
+AlchimieExtractor
+```
+
+which can convert unstructured material into candidate rules.
+
+For example:
+
+```text
+documentation
+research notes
+JSON
+agent discoveries
+experimental results
+```
+
+→ candidate Alchimie record.
+
+BUT:
+
+```text
+LLM
+ ↓
+candidate rule
+ ↓
+validation
+ ↓
+human review
+ ↓
+merge
+```
+
+Never:
+
+```text
+LLM
+ ↓
+canonical library
+```
+
+---
+
+# 25. Rules discovered by Hermes
+
+If Hermes discovers a potentially useful transformation during reasoning, it may create:
+
+```text
+new_data/discovered_<timestamp>.json
+```
+
+but this is a **candidate**.
+
+It should have:
+
+```json
+{
+  "status": "hypothesis",
+  "source": "hermes",
+  "requires_validation": true
+}
+```
+
+The discovery does not automatically become a production rule.
+
+---
+
+# 26. Alchimie and Thinker integration
+
+The Thinker can query Alchimie:
+
+```text
+Thinker
+   ↓
+Alchimie query
+   ↓
+available transformations
+   ↓
+reasoning
+```
+
+For example:
+
+```python
+alchimie.find_rules(
+    domain="mathematics",
+    type="transformation"
+)
+```
+
+The Thinker may propose using a rule.
+
+The Orchestrator decides whether that rule is relevant.
+
+---
+
+# 27. Mirror system integration
+
+The MirrorAgent should also use Alchimie.
+
+Example:
+
+```text
+MirrorAgent
+    ↓
+query Alchimie
+    ↓
+mirror transformations
+    ↓
+apply candidate transformation
+    ↓
+return result
+```
+
+The mirror parameters:
+
+```text
+1
+2
+6
+8
+10
+```
+
+can therefore become structured data rather than hard-coded magic numbers.
+
+Example:
+
+```json
+{
+  "id": "mirror.parameter.set.primary",
+  "type": "parameter_set",
+  "values": [1, 2, 6, 8, 10],
+  "status": "experimental"
+}
+```
+
+---
+
+# 28. Infinity rule
+
+The experimental rule:
+
+```text
+∞ / 12 → ∞
+```
+
+can be represented in Alchimie as:
+
+```json
+{
+  "id": "experimental.infinity.div12",
+  "type": "transformation",
+  "domain": "experimental_mathematics",
+  "expression": "INF / 12 -> INF",
+  "status": "hypothesis",
+  "experimental": true,
+  "requires_validation": true
+}
+```
+
+Do NOT represent it as a universally valid mathematical law.
+
+The rule engine must preserve the distinction between:
+
+```text
+formal mathematical rule
+```
+
+and:
+
+```text
+experimental transformation
+```
+
+---
+
+# 29. Query API
+
+Create a clean API:
+
+```python
+alchimie.get_rule(rule_id)
+
+alchimie.find_rules(
+    domain=...,
+    type=...,
+    status=...
+)
+
+alchimie.transform(
+    value,
+    rule_id,
+    parameters=...
+)
+
+alchimie.validate_rule(rule)
+
+alchimie.library_version()
+
+alchimie.list_pending()
+
+alchimie.preview_merge()
+
+alchimie.merge()
+
+alchimie.rollback()
+```
+
+The exact API can follow the existing project architecture.
+
+---
+
+# 30. Caching
+
+Hermes may cache loaded Alchimie rules for performance.
+
+However, after a successful merge:
+
+```text
+cache invalidation
+```
+
+must occur.
+
+Provide:
+
+```python
+alchimie.reload()
+```
+
+or equivalent.
+
+Hermes must never continue using stale rules after the user explicitly refreshes the library.
+
+---
+
+# 31. Thread/process safety
+
+If multiple Hermes components access Alchimie simultaneously:
+
+```text
+Worker
+Thinker
+Mirror
+Orchestrator
+UI
+```
+
+the canonical library must be treated as read-only during normal operation.
+
+Only the Library Manager may perform writes.
+
+This creates a clean boundary:
+
+```text
+READ:
+    all agents
+
+WRITE:
+    Library Manager only
+```
+
+---
+
+# 32. UI status
+
+Display:
+
+```text
+Alchimie
+
+Version: 1.5.0
+Rules: 284
+Transformations: 91
+
+Pending:
+    4 files
+    27 records
+
+Status:
+    ✓ Valid
+```
+
+If there are pending conflicts:
+
+```text
+⚠ 2 conflicts require review
+```
+
+---
+
+# 33. CLI and GUI must use the same engine
+
+Do not implement separate merge logic for:
+
+```text
+CLI
+```
+
+and:
+
+```text
+GUI
+```
+
+Both should call:
+
+```text
+AlchimieLibraryManager
+```
+
+Example:
+
+```text
+GUI
+ ↓
+LibraryManager
+ ↓
+MergeEngine
+```
+
+and:
+
+```text
+CLI
+ ↓
+LibraryManager
+ ↓
+MergeEngine
+```
+
+There must be one source of truth.
+
+---
+
+# 34. Tests
+
+Create tests for:
+
+```text
+valid JSON
+invalid JSON
+schema validation
+duplicate detection
+version handling
+conflict detection
+merge
+rollback
+atomic write
+archive
+library versioning
+rule lookup
+transformation
+experimental rule handling
+cache invalidation
+```
+
+Especially test:
+
+```text
+merge succeeds
+```
+
+and:
+
+```text
+merge fails halfway
+```
+
+The second case must leave the canonical library unchanged.
+
+---
+
+# 35. Main workflow
+
+The intended user workflow is:
+
+```text
+1. Add new JSON files to:
+
+   alchimie/new_data/
+
+2. Open Hermes.
+
+3. Click:
+
+   [ Scan New Data ]
+
+4. Click:
+
+   [ Validate ]
+
+5. Click:
+
+   [ Preview Merge ]
+
+6. Review:
+
+   new
+   updated
+   duplicates
+   conflicts
+   rejected
+
+7. Click:
+
+   [ Merge Files ]
+
+8. Hermes creates a backup.
+
+9. Hermes performs an atomic merge.
+
+10. Hermes validates the resulting library.
+
+11. Incoming files are archived.
+
+12. Alchimie version is updated.
+
+13. Hermes reloads the library.
+
+14. Agents can now use the new rules.
+```
+
+---
+
+# 36. Critical architecture principle
+
+The Alchimie library is NOT just a JSON dump.
+
+It is a **versioned transformation knowledge layer**.
+
+The architecture should therefore be:
+
+```text
+                 ┌─────────────────┐
+                 │    NEW DATA     │
+                 └────────┬────────┘
+                          ↓
+                    VALIDATION
+                          ↓
+                    NORMALIZATION
+                          ↓
+                    DEDUPLICATION
+                          ↓
+                    CONFLICT CHECK
+                          ↓
+                    HUMAN REVIEW
+                          ↓
+                       MERGE
+                          ↓
+                    VERSIONED DB
+                          ↓
+                  ┌───────┴────────┐
+                  ↓                ↓
+               THINKER          MIRROR
+                  │                │
+                  └───────┬────────┘
+                          ↓
+                     ORCHESTRATOR
+```
+
+The important separation is:
+
+```text
+Agents DISCOVER and USE rules.
+
+Alchimie VALIDATES and STORES rules.
+
+Library Manager CONTROLS changes.
+
+Orchestrator DECIDES whether a rule is relevant.
+
+User controls canonical library updates.
+```
+
+---
+
+# 37. Implementation instructions
+
+Before modifying the codebase:
+
+1. Inspect the existing Alchimie implementation.
+2. Inspect how Hermes currently stores rules/data.
+3. Inspect how Workers access shared knowledge.
+4. Inspect the Thinker and MirrorAgent interfaces.
+5. Inspect the existing GUI architecture.
+6. Determine the best location for `new_data/`.
+7. Reuse existing JSON/database abstractions.
+8. Do not rewrite existing working components unnecessarily.
+
+Then provide:
+
+```text
+Current architecture
+        ↓
+Required changes
+        ↓
+New files
+        ↓
+Data schema
+        ↓
+Merge pipeline
+        ↓
+GUI integration
+        ↓
+Testing plan
+```
+
+Implement the system incrementally.
+
+First make:
+
+```text
+new_data/
+    ↓
+validate
+    ↓
+preview
+    ↓
+merge
+    ↓
+backup
+    ↓
+rollback
+```
+
+work reliably.
+
+Then integrate Alchimie with the agents.
+
+---
+
+# FINAL PRINCIPLE
+
+The system should behave like a controlled laboratory for Hermes' transformation knowledge:
+
+```text
+DISCOVER
+   ↓
+STORE AS CANDIDATE
+   ↓
+VALIDATE
+   ↓
+REVIEW
+   ↓
+MERGE
+   ↓
+VERSION
+   ↓
+USE
+   ↓
+TEST
+   ↓
+IMPROVE
+```
+
+Never allow an agent to silently rewrite the canonical knowledge base.
+
+The goal is to make Alchimie **persistent, reproducible, versioned, auditable, extensible and safe to evolve**.
+

@@ -1,0 +1,649 @@
+# TASK — Implement a Mathematical Mirror / Reflection Layer in the Agentic Architecture
+
+You are working on an experimental multi-agent AI architecture.
+
+I want you to investigate and implement a **Mirror / Reflection Layer** based on a mathematical transformation concept.
+
+## 1. Core idea
+
+Introduce a dedicated agent called:
+
+`MirrorAgent`
+
+Its role is NOT to simply generate another answer.
+
+Its role is to:
+
+1. receive the output of another reasoning agent;
+2. transform the reasoning through a defined mathematical "mirror";
+3. search for an alternative interpretation;
+4. detect contradictions, symmetry, inversions and hidden assumptions;
+5. return the transformed reasoning to the Orchestrator;
+6. allow the Orchestrator to compare the original reasoning with the mirrored reasoning.
+
+Conceptually:
+
+```text
+Input
+  ↓
+Worker / Thinker
+  ↓
+Original reasoning
+  ↓
+MirrorAgent
+  ↓
+Mirrored reasoning
+  ↓
+Orchestrator / Second Thinker
+  ↓
+Comparison
+  ↓
+Final decision
+```
+
+The MirrorAgent should therefore function as a **divergence / verification agent**, not as another generic worker.
+
+---
+
+# 2. Mirror number set
+
+Use the experimental set:
+
+```text
+{1, 2, 6, 8, 10}
+```
+
+These values should be treated as **mirror parameters**, not as magical or inherently special numbers.
+
+The implementation must make the transformation explicit.
+
+For example, support a configurable mirror function:
+
+```python
+mirror(x, center)
+```
+
+with:
+
+```text
+mirror(x, c) = 2c - x
+```
+
+This gives a mathematically defined reflection around `c`.
+
+The system must allow the mirror center to be configurable.
+
+Do NOT assume that the numbers 1, 2, 6, 8 and 10 have a universally recognized mathematical "mirror" meaning.
+
+Instead, test their relationships and record the results.
+
+---
+
+# 3. Experimental infinity rule
+
+Introduce a separate experimental rule:
+
+```text
+∞ / 12 = ∞
+```
+
+IMPORTANT:
+
+This must NOT be presented by the system as a universally valid mathematical theorem.
+
+Treat it as:
+
+```text
+EXPERIMENTAL_RULE_INFINITY_DIVISION
+```
+
+or an equivalent clearly named configuration.
+
+The mathematical validation layer must explicitly distinguish:
+
+```text
+STANDARD_MATHEMATICS
+```
+
+from:
+
+```text
+EXPERIMENTAL_MIRROR_SYSTEM
+```
+
+For example:
+
+```python
+experimental_rules = {
+    "infinity_division": {
+        "enabled": True,
+        "rule": "INF / 12 -> INF",
+        "status": "experimental"
+    }
+}
+```
+
+The system should be able to disable this rule and compare behavior.
+
+---
+
+# 4. Generalize the infinity rule
+
+Do not hard-code only:
+
+```text
+∞ / 12 = ∞
+```
+
+Create a configurable rule system that can test:
+
+```text
+∞ / n
+```
+
+for finite positive values of `n`.
+
+For example:
+
+```text
+∞ / 1
+∞ / 2
+∞ / 6
+∞ / 8
+∞ / 10
+∞ / 12
+```
+
+The MirrorAgent should record:
+
+```text
+input
+operation
+standard mathematical interpretation
+experimental interpretation
+difference
+confidence
+```
+
+Example:
+
+```json
+{
+    "expression": "INF / 12",
+    "standard_interpretation": "...",
+    "experimental_interpretation": "INF",
+    "rule_used": "EXPERIMENTAL_INF_DIVISION",
+    "confidence": 0.XX
+}
+```
+
+Do not invent mathematical justification if none exists.
+
+---
+
+# 5. Extend the idea beyond numbers
+
+The MirrorAgent should be capable of applying the same conceptual transformation to different domains.
+
+Examples:
+
+```text
+numbers
+vectors
+probabilities
+embeddings
+logical propositions
+agent decisions
+textual hypotheses
+signals
+light
+sound
+time-series data
+```
+
+For physical concepts such as light or sound, DO NOT assume:
+
+```text
+∞ / 12 = ∞
+```
+
+is physically true.
+
+Instead, interpret the rule as an experimental transformation and test whether the resulting representation has any useful computational meaning.
+
+For example:
+
+```text
+signal
+   ↓
+normalize
+   ↓
+mirror transformation
+   ↓
+compare with original
+   ↓
+measure divergence
+```
+
+For signals, investigate concepts such as:
+
+* amplitude
+* frequency
+* phase
+* wavelength
+* spectrum
+* normalization
+* symmetry
+* inverse transformation
+
+Do not claim physical discoveries without evidence.
+
+---
+
+# 6. Mirror operation for AI reasoning
+
+The most important implementation is the reasoning mirror.
+
+Given:
+
+```text
+Original hypothesis H
+```
+
+generate:
+
+```text
+Mirror(H)
+```
+
+The MirrorAgent should ask questions such as:
+
+```text
+What if the main assumption is reversed?
+
+What information is missing?
+
+What happens if the relationship is inverted?
+
+What is the opposite interpretation?
+
+What remains invariant?
+
+What changes?
+
+Is there a contradiction?
+
+Does another mathematical representation produce the same result?
+
+Could the original reasoning be overconfident?
+```
+
+The MirrorAgent should actively attempt to produce a **constructive disagreement**.
+
+This is important because simple self-reflection can sometimes reinforce the original reasoning instead of discovering an error.
+
+---
+
+# 7. Orchestrator integration
+
+The Orchestrator / Second Thinker must receive both:
+
+```text
+ORIGINAL
+```
+
+and
+
+```text
+MIRROR
+```
+
+Example:
+
+```json
+{
+    "original": {...},
+    "mirror": {...},
+    "comparison": {...}
+}
+```
+
+The Orchestrator then decides:
+
+```text
+KEEP_ORIGINAL
+KEEP_MIRROR
+MERGE
+REQUEST_REANALYSIS
+REJECT_BOTH
+```
+
+The Orchestrator must NOT blindly prefer the MirrorAgent.
+
+The goal is:
+
+```text
+divergence → comparison → verification → decision
+```
+
+not:
+
+```text
+worker → mirror → automatically trust mirror
+```
+
+---
+
+# 8. Add a mathematical validation layer
+
+Create a component such as:
+
+```text
+MathValidator
+```
+
+Its job is to classify every transformation:
+
+```text
+VALID_STANDARD_MATH
+VALID_UNDER_SPECIFIC_FORMALISM
+EXPERIMENTAL_RULE
+UNDEFINED
+CONTRADICTORY
+REQUIRES_NUMERICAL_TEST
+```
+
+This is extremely important.
+
+The architecture should never confuse an experimental computational rule with established mathematics.
+
+For example:
+
+```text
+∞ / 12 = ∞
+```
+
+should be tagged according to the mathematical framework being used rather than blindly declared true.
+
+---
+
+# 9. Mirror score
+
+Create a score describing how useful the mirrored reasoning is.
+
+For example:
+
+```text
+mirror_score =
+    contradiction_detection
+  + novelty
+  + consistency
+  + explanatory_value
+  + evidence_support
+```
+
+Normalize it between:
+
+```text
+0.0 → 1.0
+```
+
+The score should be transparent.
+
+Return something like:
+
+```json
+{
+    "mirror_score": 0.78,
+    "novelty": 0.82,
+    "consistency": 0.71,
+    "contradiction_detected": true,
+    "evidence_support": 0.80
+}
+```
+
+Do not pretend these scores are objective truth. They are evaluation metrics.
+
+---
+
+# 10. Preserve provenance
+
+Every transformation must record:
+
+```text
+agent
+input
+operation
+rule
+output
+timestamp
+confidence
+validation_status
+```
+
+This is necessary so the system can later determine:
+
+```text
+Why did the Orchestrator choose this answer?
+```
+
+The system should produce a trace similar to:
+
+```text
+Worker
+  → hypothesis H
+
+MirrorAgent
+  → transformation M(H)
+
+MathValidator
+  → standard interpretation
+
+Orchestrator
+  → comparison
+
+Decision
+  → final result
+```
+
+---
+
+# 11. Experimental research mode
+
+Add an optional mode:
+
+```text
+MIRROR_RESEARCH_MODE=true
+```
+
+When enabled, the system should systematically test the mirror rules.
+
+For the initial experiment, generate a matrix involving:
+
+```text
+1
+2
+6
+8
+10
+12
+∞
+```
+
+and operations such as:
+
+```text
++
+-
+*
+/
+mirror
+inverse
+normalization
+```
+
+For every result, classify it.
+
+Example:
+
+```text
+1 ↔ ?
+2 ↔ ?
+6 ↔ ?
+8 ↔ ?
+10 ↔ ?
+
+∞ / 12 → ?
+```
+
+The objective is to discover whether there are useful computational invariants, not to force a pattern.
+
+---
+
+# 12. Testing requirements
+
+Create unit tests for:
+
+```text
+mirror(x, center)
+```
+
+and tests ensuring:
+
+```text
+mirror(mirror(x)) == x
+```
+
+where mathematically applicable.
+
+Test the infinity rule separately.
+
+The tests must distinguish:
+
+```text
+standard mathematical behavior
+```
+
+from:
+
+```text
+experimental behavior
+```
+
+Also test that disabling experimental rules restores standard behavior.
+
+---
+
+# 13. Architecture principle
+
+The final architecture should resemble:
+
+```text
+                 ┌──────────────┐
+                 │    Input     │
+                 └──────┬───────┘
+                        ↓
+                 ┌──────────────┐
+                 │    Worker    │
+                 └──────┬───────┘
+                        ↓
+                 ┌──────────────┐
+                 │  Thinker     │
+                 └──────┬───────┘
+                        ↓
+                ┌────────────────┐
+                │  MirrorAgent   │
+                └───────┬────────┘
+                        ↓
+                ┌────────────────┐
+                │  MathValidator │
+                └───────┬────────┘
+                        ↓
+             ┌─────────────────────┐
+             │ Second Thinker /    │
+             │    Orchestrator     │
+             └──────────┬──────────┘
+                        ↓
+                   Final Answer
+```
+
+The MirrorAgent should be independent from the normal workers.
+
+It should not replace the existing reasoning agents.
+
+It should provide a second representation of the problem.
+
+---
+
+# 14. Research objective
+
+The purpose of this experiment is to determine whether a mathematically explicit **mirror transformation** can improve an agentic architecture by increasing:
+
+* contradiction detection
+* hypothesis diversity
+* reasoning robustness
+* error detection
+* alternative solution discovery
+* decision quality
+
+Do NOT assume beforehand that it works.
+
+Measure it.
+
+Run comparisons:
+
+```text
+Architecture A:
+Workers → Orchestrator
+
+Architecture B:
+Workers → MirrorAgent → Orchestrator
+```
+
+Compare the results.
+
+If the MirrorAgent does not improve performance, report that honestly.
+
+If it improves performance, identify exactly where and why.
+
+---
+
+# 15. Deliverables
+
+Implement the smallest clean version first.
+
+Deliver:
+
+1. `MirrorAgent`
+2. `MathValidator`
+3. configurable mirror rules
+4. experimental infinity rule
+5. Orchestrator integration
+6. unit tests
+7. research mode
+8. logging/provenance
+9. documentation
+10. benchmark comparing Mirror OFF vs Mirror ON
+
+Do not rewrite the entire architecture unnecessarily.
+
+First inspect the existing codebase and identify the correct agent/module to integrate with.
+
+Reuse existing abstractions whenever possible.
+
+Before modifying files, explain briefly:
+
+```text
+current architecture
+target integration point
+files that need modification
+new files required
+data flow
+```
+
+Then implement the smallest viable version.
+
+The objective is not to prove that the "mirror numbers" or `∞ / 12 = ∞` are objectively true.
+
+The objective is to turn the idea into a **testable computational hypothesis** inside the agentic architecture.
+

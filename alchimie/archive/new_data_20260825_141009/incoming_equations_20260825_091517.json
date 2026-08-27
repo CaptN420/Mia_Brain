@@ -1,0 +1,221 @@
+{
+  "rules": [
+    {
+      "id": "equation.ndot___k___a___δc_d___l.v1",
+      "name": "Ndot = k * A * ΔC D / L",
+      "type": "transformation",
+      "domain": "general",
+      "definition": "Equation approuvee par debat MIA",
+      "unit": "",
+      "measure": "",
+      "role": "",
+      "links": [
+        "Ndot = k * A * ΔC D / L"
+      ],
+      "status": "candidate",
+      "experimental": true,
+      "version": "1.0.0",
+      "source": "mia_debate",
+      "description": "Ndot = k * A * ΔC D / L",
+      "constraints": [],
+      "validation": {
+        "tested": false,
+        "tests": []
+      },
+      "family": "general",
+      "micro_equation": "Ndot = k * A * ΔC D / L",
+      "experiment": "",
+      "approved": false,
+      "source_turn": 0,
+      "source_agent": "MIA",
+      "validation_summary": "Equation: Ndot = k * A * ΔC D / L",
+      "source_session": "alchemy_session_20260825_033116"
+    },
+    {
+      "id": "equation.ndot___j_d___l.v1",
+      "name": "Ndot = J D / L",
+      "type": "transformation",
+      "domain": "general",
+      "definition": "Equation approuvee par debat MIA",
+      "unit": "",
+      "measure": "",
+      "role": "",
+      "links": [
+        "Ndot = J D / L"
+      ],
+      "status": "candidate",
+      "experimental": true,
+      "version": "1.0.0",
+      "source": "mia_debate",
+      "description": "Ndot = J D / L",
+      "constraints": [],
+      "validation": {
+        "tested": false,
+        "tests": []
+      },
+      "family": "general",
+      "micro_equation": "Ndot = J D / L",
+      "experiment": "",
+      "approved": false,
+      "source_turn": 0,
+      "source_agent": "MIA",
+      "validation_summary": "Equation: Ndot = J D / L",
+      "source_session": "alchemy_session_20260825_033116"
+    },
+    {
+      "id": "equation.ndot___j___a_d___l.v1",
+      "name": "Ndot = J * A D / L",
+      "type": "transformation",
+      "domain": "general",
+      "definition": "Equation approuvee par debat MIA",
+      "unit": "",
+      "measure": "",
+      "role": "",
+      "links": [
+        "Ndot = J * A D / L"
+      ],
+      "status": "candidate",
+      "experimental": true,
+      "version": "1.0.0",
+      "source": "mia_debate",
+      "description": "Ndot = J * A D / L",
+      "constraints": [],
+      "validation": {
+        "tested": false,
+        "tests": []
+      },
+      "family": "general",
+      "micro_equation": "Ndot = J * A D / L",
+      "experiment": "",
+      "approved": false,
+      "source_turn": 0,
+      "source_agent": "MIA",
+      "validation_summary": "Equation: Ndot = J * A D / L",
+      "source_session": "alchemy_session_20260825_033116"
+    },
+    {
+      "id": "equation.ndot_____k___a___δc_______1___alpha___δc.v1",
+      "name": "Ndot = ( k * A * ΔC ) / ( 1 + alpha * ΔC ) D / L",
+      "type": "transformation",
+      "domain": "general",
+      "definition": "Equation approuvee par debat MIA",
+      "unit": "",
+      "measure": "",
+      "role": "",
+      "links": [
+        "Ndot = ( k * A * ΔC ) / ( 1 + alpha * ΔC ) D / L"
+      ],
+      "status": "candidate",
+      "experimental": true,
+      "version": "1.0.0",
+      "source": "mia_debate",
+      "description": "Ndot = ( k * A * ΔC ) / ( 1 + alpha * ΔC ) D / L",
+      "constraints": [],
+      "validation": {
+        "tested": false,
+        "tests": []
+      },
+      "family": "general",
+      "micro_equation": "Ndot = ( k * A * ΔC ) / ( 1 + alpha * ΔC ) D / L",
+      "experiment": "",
+      "approved": false,
+      "source_turn": 0,
+      "source_agent": "MIA",
+      "validation_summary": "Equation: Ndot = ( k * A * ΔC ) / ( 1 + alpha * ΔC ) D / L",
+      "source_session": "alchemy_session_20260825_033116"
+    },
+    {
+      "id": "equation.ndot_______a___δc_____l_d___l.v1",
+      "name": "Ndot = ( * A * ΔC ) / L D / L",
+      "type": "transformation",
+      "domain": "general",
+      "definition": "Equation approuvee par debat MIA",
+      "unit": "",
+      "measure": "",
+      "role": "",
+      "links": [
+        "Ndot = ( * A * ΔC ) / L D / L"
+      ],
+      "status": "candidate",
+      "experimental": true,
+      "version": "1.0.0",
+      "source": "mia_debate",
+      "description": "Ndot = ( * A * ΔC ) / L D / L",
+      "constraints": [],
+      "validation": {
+        "tested": false,
+        "tests": []
+      },
+      "family": "general",
+      "micro_equation": "Ndot = ( * A * ΔC ) / L D / L",
+      "experiment": "",
+      "approved": false,
+      "source_turn": 0,
+      "source_agent": "MIA",
+      "validation_summary": "Equation: Ndot = ( * A * ΔC ) / L D / L",
+      "source_session": "alchemy_session_20260825_033116"
+    },
+    {
+      "id": "equation.ndot_______a___δc_____l_d____1___a.v1",
+      "name": "Ndot = ( * A * ΔC ) / L D / (1 + A)",
+      "type": "transformation",
+      "domain": "general",
+      "definition": "Equation approuvee par debat MIA",
+      "unit": "",
+      "measure": "",
+      "role": "",
+      "links": [
+        "Ndot = ( * A * ΔC ) / L D / (1 + A)"
+      ],
+      "status": "candidate",
+      "experimental": true,
+      "version": "1.0.0",
+      "source": "mia_debate",
+      "description": "Ndot = ( * A * ΔC ) / L D / (1 + A)",
+      "constraints": [],
+      "validation": {
+        "tested": false,
+        "tests": []
+      },
+      "family": "general",
+      "micro_equation": "Ndot = ( * A * ΔC ) / L D / (1 + A)",
+      "experiment": "",
+      "approved": false,
+      "source_turn": 0,
+      "source_agent": "MIA",
+      "validation_summary": "Equation: Ndot = ( * A * ΔC ) / L D / (1 + A)",
+      "source_session": "alchemy_session_20260825_033116"
+    },
+    {
+      "id": "equation.ndot_____k___a___δc_______1_____δc_____l.v1",
+      "name": "Ndot = ( k * A * ΔC ) / ( 1 + * ΔC ) / L",
+      "type": "transformation",
+      "domain": "general",
+      "definition": "Equation approuvee par debat MIA",
+      "unit": "",
+      "measure": "",
+      "role": "",
+      "links": [
+        "Ndot = ( k * A * ΔC ) / ( 1 + * ΔC ) / L"
+      ],
+      "status": "candidate",
+      "experimental": true,
+      "version": "1.0.0",
+      "source": "mia_debate",
+      "description": "Ndot = ( k * A * ΔC ) / ( 1 + * ΔC ) / L",
+      "constraints": [],
+      "validation": {
+        "tested": false,
+        "tests": []
+      },
+      "family": "general",
+      "micro_equation": "Ndot = ( k * A * ΔC ) / ( 1 + * ΔC ) / L",
+      "experiment": "",
+      "approved": false,
+      "source_turn": 0,
+      "source_agent": "MIA",
+      "validation_summary": "Equation: Ndot = ( k * A * ΔC ) / ( 1 + * ΔC ) / L",
+      "source_session": "alchemy_session_20260825_033116"
+    }
+  ]
+}

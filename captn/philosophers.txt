@@ -1,0 +1,73 @@
+The 10 Most Famous Philosophers:
+1. Socrates - Classical Greek philosopher credited as one of the founders of Western philosophy
+2. Plato - Student of Socrates, founder of the Academy in Athens, wrote philosophical dialogues
+3. Aristotle - Student of Plato, tutor of Alexander the Great, covered ethics, metaphysics, logic
+4. René Descartes - French philosopher/mathematician "I think therefore I am," father of modern philosophy
+5. Friedrich Nietzsche - German philosopher, "God is dead," will to power, beyond good and evil
+6. Immanuel Kant - German philosopher, categorical imperative, Critique of Pure Reason
+7. Confucius - Chinese philosopher, ethics, morality, social relationships
+8. John Locke - Empiricist, social contract, tabula rasa, natural rights
+9. G.W.F. Hegel - German philosopher, dialectics, thesis-antithesis-synthesis
+10. Karl Marx - Philosopher/economist, communist theory, Das Kapital
+
+The 10 Most Famous Scientists:
+1. Albert Einstein - Theory of relativity, E=mc², photoelectric effect
+2. Isaac Newton - Laws of motion, universal gravitation, calculus
+3. Charles Darwin - Theory of evolution by natural selection
+4. Nikola Tesla - AC electricity, Tesla coil, contributions to electromagnetism
+5. Galileo Galilei - Improvements to telescope, astronomical observations, heliocentrism
+6. Marie Curie - Radioactivity, Nobel Prizes in Physics and Chemistry
+7. Stephen Hawking - Black holes, relativity, Hawking radiation
+8. Thomas Edison - Light bulb, phonograph, 1,093 patents
+9. James Clerk Maxwell - Maxwell's equations, electromagnetic theory
+10. Louis Pasteur - Germ theory, pasteurization, vaccines
+
+The 10 Most Famous Physicists:
+1. Albert Einstein - Relativity, photoelectric effect, Nobel Prize 1921
+2. Isaac Newton - Laws of motion, universal gravitation, optics
+3. Niels Bohr - Bohr model of atom, complementarity principle, Nobel Prize 1922
+4. Max Planck - Quantum theory, E=hf, Nobel Prize 1918
+5. Werner Heisenberg - Uncertainty principle, matrix mechanics, Nobel Prize 1932
+6. Richard Feynman - Quantum electrodynamics, Feynman diagrams, Nobel Prize 1965
+7. Erwin Schrödinger - Wave equation, Schrödinger's cat, Nobel Prize 1933
+8. James Clerk Maxwell - Electromagnetic theory, Maxwell's equations
+9. Galileo Galilei - Kinematics, telescope astronomy, scientific method
+10. Stephen Hawking - Black hole thermodynamics, Hawking radiation
+
+The 10 Most Famous Mathematicians:
+1. Carl Friedrich Gauss - Prince of mathematicians, number theory, Gaussian distribution
+2. Leonhard Euler - Notation f(x), e constant, Euler's formula, graph theory
+3. Isaac Newton - Calculus, binomial theorem, optical physics
+4. Pythagoras - Pythagorean theorem, number theory, geometry
+5. Bernhard Riemann - Riemann geometry, zeta hypothesis, manifold theory
+6. David Hilbert - Hilbert spaces, 23 problems, formalism
+7. Alan Turing - Turing machine, computability, codebreaking
+8. Joseph Fourier - Fourier series, heat equation, harmonic analysis
+9. René Descartes - Cartesian coordinates, analytic geometry
+10. Euclid - Elements, geometry axioms, mathematical rigor
+
+The 10 Most Famous Chemists:
+1. Dmitri Mendeleev - Periodic table of elements
+2. Antoine Lavoisier - Father of modern chemistry, oxygen, conservation of mass
+3. John Dalton - Atomic theory, laws of partial pressures
+4. Robert Boyle - Boyle's law, chemistry as quantitative science
+5. Linus Pauling - Chemical bonding, electronegativity, peace activist
+6. Marie Curie - Radioactivity, Nobel Prizes in Physics and Chemistry
+7. Amedeo Avogadro - Avogadro's law, Avogadro's number
+8. Ernest Rutherford - Nuclear atom, gold foil experiment
+9. J.J. Thomson - Electron discovery, cathode rays
+10. Niels Bohr - Bohr model, complementarity (also physicist)
+
+The 10 Most Famous Alchemists:
+1. Hermes Trismegistus - Legendary founder of Hermeticism, "As above so below"
+2. Jabir ibn Hayyan (Geber) - Distillation, arsenic isolation, "father of chemistry"
+3. Paracelsus (Theophrastus Bombastus von Hohenheim) - Medical chemistry, laudanum
+4. Roger Bacon - Experimental science, gunpowder, optical lenses
+5. John Dee - Enochian magic, navigation, alchemical manuscripts
+6. Basil Valentine - Antimony, distillation, early metallurgy
+7. Fulcanelli - 20th-century mysterious alchemist, "The Mysterious Stranger"
+8. Albertus Magnus - Thomas Aquinas teacher, metal transmutation attempts
+9. Cornelius Agrippa - Occult philosophy, Three Books of Occult Philosophy
+10. Basilius Valentinus - Monkshood, distillation, early chemistry
+
+Note: Many early "chemists" were also alchemists - the line between alchemy and modern chemistry was gradually drawn over centuries of systematic experimentation.

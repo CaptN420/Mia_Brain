@@ -1,0 +1,9 @@
+streamlit>=1.30
+streamlit-autorefresh
+streamlit-cookies-controller
+requests
+openai
+pandas
+numpy
+psutil
+pytest

@@ -1,0 +1,53 @@
+{
+  "library_version": "1.0.0",
+  "transformations": [
+    {
+      "id": "link.tau_eff.concentration.v1",
+      "name": "τ_eff augmente la concentration",
+      "type": "transformation",
+      "domain": "temps caracteristique",
+      "expression": "τ_eff augmente la concentration de particules en augmentant la durée de diffusion.",
+      "status": "validated",
+      "experimental": false,
+      "version": "1.0.0",
+      "source": "alchimie",
+      "description": "Causal link: τ_eff increases particle concentration by increasing diffusion duration."
+    },
+    {
+      "id": "link.k_eff.speed.v1",
+      "name": "k_eff augmente la vitesse",
+      "type": "transformation",
+      "domain": "cinetique",
+      "expression": "k_eff augmente la vitesse apparente du processus.",
+      "status": "validated",
+      "experimental": false,
+      "version": "1.0.0",
+      "source": "alchimie",
+      "description": "Causal link: k_eff increases the apparent speed of the process."
+    },
+    {
+      "id": "link.k_eff.time.v1",
+      "name": "k_eff diminue le temps",
+      "type": "transformation",
+      "domain": "cinetique",
+      "expression": "k_eff diminue le temps nécessaire pour observer une conversion donnée.",
+      "status": "validated",
+      "experimental": false,
+      "version": "1.0.0",
+      "source": "alchimie",
+      "description": "Causal link: k_eff decreases the time necessary to observe a given conversion."
+    },
+    {
+      "id": "link.tau_surf.duration.v1",
+      "name": "τ_surf augmente la durée",
+      "type": "transformation",
+      "domain": "temps caracteristique",
+      "expression": "τ_surf augmente la durée de diffusion de la matière sur une surface.",
+      "status": "validated",
+      "experimental": false,
+      "version": "1.0.0",
+      "source": "alchimie",
+      "description": "Causal link: τ_surf increases the diffusion duration of matter on a surface."
+    }
+  ]
+}

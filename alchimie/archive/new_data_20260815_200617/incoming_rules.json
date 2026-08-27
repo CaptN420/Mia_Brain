@@ -1,0 +1,34 @@
+{
+  "rules": [
+    {
+      "id": "variable.s_eff.v1",
+      "name": "S_eff",
+      "type": "transformation",
+      "domain": "structure",
+      "definition": "Surface active de l'interface",
+      "unit": "m²",
+      "measure": "Mesure de la surface active de l'interface",
+      "role": "Augmente ou diminue la surface active d'échange",
+      "links": [
+        "S_eff augmente la surface active d'échange."
+      ],
+      "status": "candidate",
+      "experimental": true,
+      "version": "1.0.0",
+      "source": "alchimie",
+      "description": "Surface active de l'interface",
+      "constraints": [],
+      "validation": {
+        "tested": false,
+        "tests": []
+      },
+      "family": "structure",
+      "micro_equation": "",
+      "experiment": "",
+      "approved": false,
+      "source_turn": 3,
+      "source_agent": "Hermes",
+      "validation_summary": "Variable : S_eff\nFamille : structure\nDéfinition : Surface active de l'interface\nUnité : m²\nMesure : Mesure de la surface active de l'interface\nRôle causal : S_eff représente la surface active de l'interface et est liée à la surface d'échange."
+    }
+  ]
+}

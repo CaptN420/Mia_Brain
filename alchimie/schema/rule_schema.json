@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["id", "name", "type", "domain", "status", "version"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the rule"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name of the rule"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["transformation", "constraint", "parameter_set", "validation"],
+      "description": "Type of the rule"
+    },
+    "domain": {
+      "type": "string",
+      "description": "Domain or family the rule belongs to"
+    },
+    "definition": {
+      "type": "string",
+      "description": "Definition or description of the rule"
+    },
+    "expression": {
+      "type": "string",
+      "description": "Mathematical or logical expression of the rule"
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Input parameters for the rule"
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Output parameters from the rule"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["validated", "experimental", "hypothesis", "deprecated", "rejected", "candidate"],
+      "description": "Validation status of the rule"
+    },
+    "experimental": {
+      "type": "boolean",
+      "description": "Whether the rule is experimental"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Semantic version of the rule"
+    },
+    "source": {
+      "type": "string",
+      "description": "Source of the rule (e.g., 'alchimie', 'hermes', 'manual')"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the rule"
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Constraints associated with the rule"
+    },
+    "validation": {
+      "type": "object",
+      "properties": {
+        "tested": {
+          "type": "boolean"
+        },
+        "tests": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "requires_validation": {
+      "type": "boolean",
+      "description": "Whether the rule requires further validation"
+    }
+  }
+}

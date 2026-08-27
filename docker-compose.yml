@@ -1,0 +1,45 @@
+# CaptN-BRAIN container stack
+#
+# Build & run:
+#   docker compose up --build          # dashboard on http://localhost:8501
+# Run an untrusted script inside the container (inner wd-40 sandbox):
+#   docker compose run --rm captn python wd-40/run.py scripts/foo.py
+#   docker compose run --rm captn python wd-40/run.py --net captn/workers/crawler.py
+#
+# NOTE: Docker is not installed on the dev host where this was generated, so
+# this file is written but not yet `up`-verified. Validate with `docker compose config`.
+services:
+  captn:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: captn-brain:latest
+    ports:
+      - "8501:8501"
+    # ---- Secrets: mounted read-only at RUNTIME, never baked into the image ----
+    volumes:
+      - ./.captn:/app/.captn:ro
+      # Runtime data persisted on the host (matches .dockerignore exclusions)
+      - ./crawled:/app/crawled
+      - ./generated:/app/generated
+      - ./wd-40/logs:/app/wd-40/logs
+      - ./wd-40/feeds:/app/wd-40/feeds
+      - ./wd-40/quarantine:/app/wd-40/quarantine
+      - ./wd-40/sandbox:/app/wd-40/sandbox
+    # Reach host LLM backends (Ollama :11434, LM Studio :1234)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      # Point the app at the host Ollama instead of container-localhost.
+      # (agents/config.py currently hardcodes localhost:11434 — override here
+      #  or set your provider base_url to http://host.docker.internal:11434)
+      - OLLAMA_HOST=host.docker.internal:11434
+      - PYTHONUTF8=1
+      - PYTHONUNBUFFERED=1
+    # Hardening
+    security_opt:
+      - no-new-privileges:true
+    # The app writes under /app/wd-40 and /app/crawled|generated, so the rootfs
+    # stays writable there; for stricter setups mount a tmpfs on /tmp and keep
+    # the rest read-only, then add explicit writable volumes.
+    restart: unless-stopped

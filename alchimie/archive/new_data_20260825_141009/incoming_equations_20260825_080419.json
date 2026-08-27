@@ -1,0 +1,66 @@
+{
+  "rules": [
+    {
+      "id": "equation.ndot______k___a___δc_______1___alpha___δ.v1",
+      "name": "Ndot = (( k * A * ΔC ) / ( 1 + alpha * ΔC ) D) / (1 + k * A)",
+      "type": "transformation",
+      "domain": "general",
+      "definition": "Equation approuvee par debat MIA",
+      "unit": "",
+      "measure": "",
+      "role": "",
+      "links": [
+        "Ndot = (( k * A * ΔC ) / ( 1 + alpha * ΔC ) D) / (1 + k * A)"
+      ],
+      "status": "candidate",
+      "experimental": true,
+      "version": "1.0.0",
+      "source": "mia_debate",
+      "description": "Ndot = (( k * A * ΔC ) / ( 1 + alpha * ΔC ) D) / (1 + k * A)",
+      "constraints": [],
+      "validation": {
+        "tested": false,
+        "tests": []
+      },
+      "family": "general",
+      "micro_equation": "Ndot = (( k * A * ΔC ) / ( 1 + alpha * ΔC ) D) / (1 + k * A)",
+      "experiment": "",
+      "approved": false,
+      "source_turn": 0,
+      "source_agent": "MIA",
+      "validation_summary": "Equation: Ndot = (( k * A * ΔC ) / ( 1 + alpha * ΔC ) D) / (1 + k * A)",
+      "source_session": "alchemy_session_20260825_080244"
+    },
+    {
+      "id": "equation.ndot_____k___a___δc_______1___alpha___δc.v1",
+      "name": "Ndot = ( k * A * ΔC ) / ( 1 + alpha * ΔC ) / (1 + A)",
+      "type": "transformation",
+      "domain": "general",
+      "definition": "Equation approuvee par debat MIA",
+      "unit": "",
+      "measure": "",
+      "role": "",
+      "links": [
+        "Ndot = ( k * A * ΔC ) / ( 1 + alpha * ΔC ) / (1 + A)"
+      ],
+      "status": "candidate",
+      "experimental": true,
+      "version": "1.0.0",
+      "source": "mia_debate",
+      "description": "Ndot = ( k * A * ΔC ) / ( 1 + alpha * ΔC ) / (1 + A)",
+      "constraints": [],
+      "validation": {
+        "tested": false,
+        "tests": []
+      },
+      "family": "general",
+      "micro_equation": "Ndot = ( k * A * ΔC ) / ( 1 + alpha * ΔC ) / (1 + A)",
+      "experiment": "",
+      "approved": false,
+      "source_turn": 0,
+      "source_agent": "MIA",
+      "validation_summary": "Equation: Ndot = ( k * A * ΔC ) / ( 1 + alpha * ΔC ) / (1 + A)",
+      "source_session": "alchemy_session_20260825_080244"
+    }
+  ]
+}

@@ -1,0 +1,1190 @@
+# HERMES — VALIDATION LOOP, DEADLOCK DETECTION & LAST-RESORT LLM FALLBACK
+
+## Objective
+
+Implement a robust recovery mechanism for the Hermes agentic pipeline.
+
+The system must be able to handle situations where:
+
+* Workers disagree;
+* the Thinker cannot establish a coherent hypothesis;
+* the Orchestrator cannot validate a conclusion;
+* validation repeatedly fails;
+* generated fixes repeatedly fail;
+* agents enter a reasoning loop;
+* the same hypotheses keep circulating;
+* the system reaches a deadlock;
+* a fix is repeatedly rejected.
+
+The system must NEVER enter an infinite agent loop.
+
+However, the system must also avoid using an LLM fallback prematurely.
+
+The fallback LLM is an **absolute last-resort recovery mechanism**.
+
+The core rule is:
+
+```text
+NORMAL PIPELINE
+    ↓
+REASONING
+    ↓
+VALIDATION
+    ↓
+RETRY / REANALYSIS
+    ↓
+DEADLOCK DETECTION
+    ↓
+RECOVERY
+    ↓
+LAST-RESORT LLM FALLBACK
+    ↓
+FULL RE-ANALYSIS
+    ↓
+FULL RE-VALIDATION
+    ↓
+NORMAL ORCHESTRATOR DECISION
+```
+
+The fallback does NOT have authority to produce the final result.
+
+---
+
+# 1. Normal pipeline
+
+The normal architecture should remain:
+
+```text
+                    INPUT
+                      │
+                      ▼
+                   WORKERS
+                      │
+                      ▼
+                   THINKER
+                      │
+                      ▼
+                 MIRROR AGENT
+                      │
+                      ▼
+                 VALIDATORS
+                      │
+                      ▼
+                ORCHESTRATOR
+                      │
+              ┌───────┴────────┐
+              │                │
+           ACCEPT            REJECT
+              │                │
+              ▼                ▼
+           RESULT          REANALYZE
+```
+
+The system should always attempt this normal path first.
+
+---
+
+# 2. Never allow uncontrolled loops
+
+The system must detect loops such as:
+
+```text
+Worker
+ ↓
+Thinker
+ ↓
+Orchestrator
+ ↓
+Worker
+ ↓
+Thinker
+ ↓
+Orchestrator
+ ↓
+Worker
+ ↓
+...
+```
+
+and:
+
+```text
+Hypothesis A
+ ↓
+Rejected
+ ↓
+Hypothesis A'
+ ↓
+Rejected
+ ↓
+Hypothesis A
+ ↓
+Rejected
+```
+
+and:
+
+```text
+Fix A
+ ↓
+Validation failed
+ ↓
+Fix B
+ ↓
+Validation failed
+ ↓
+Fix A
+ ↓
+Validation failed
+```
+
+These are not productive iterations.
+
+The system must recognize them as possible:
+
+```text
+LOOP
+DEADLOCK
+STAGNATION
+REPEATED_FAILURE
+```
+
+---
+
+# 3. Iteration controller
+
+Create a dedicated component:
+
+```text
+IterationController
+```
+
+Its responsibility is to manage reasoning cycles.
+
+It should track:
+
+```text
+cycle_id
+analysis_id
+hypothesis_id
+fix_id
+worker_results
+thinker_results
+orchestrator_decisions
+validation_results
+state_hash
+reasoning_signature
+```
+
+The controller determines whether another iteration is justified.
+
+---
+
+# 4. State fingerprinting
+
+Every reasoning cycle should produce a fingerprint.
+
+For example:
+
+```text
+state_fingerprint =
+    hash(
+        normalized_worker_results +
+        normalized_thinker_result +
+        normalized_orchestrator_state +
+        relevant_project_state
+    )
+```
+
+If the same fingerprint appears repeatedly:
+
+```text
+same state
+→ same reasoning
+→ same decision
+→ same failure
+```
+
+the system should recognize stagnation.
+
+Do not simply count iterations.
+
+Detect **meaningful repetition**.
+
+---
+
+# 5. Loop detection
+
+Create:
+
+```text
+LoopDetector
+```
+
+It should detect:
+
+### Exact repetition
+
+```text
+A → B → A → B
+```
+
+### State repetition
+
+```text
+STATE_42
+STATE_51
+STATE_42
+STATE_51
+```
+
+### Hypothesis repetition
+
+```text
+H1
+H2
+H1
+H2
+```
+
+### Fix repetition
+
+```text
+FIX_A
+FIX_B
+FIX_A
+```
+
+### Validation repetition
+
+```text
+FAIL_X
+FAIL_X
+FAIL_X
+```
+
+### No-progress iterations
+
+```text
+iteration 1 → confidence 0.71
+iteration 2 → confidence 0.71
+iteration 3 → confidence 0.70
+iteration 4 → confidence 0.71
+```
+
+This should be considered stagnation.
+
+---
+
+# 6. Iteration budget
+
+Use configurable safety limits.
+
+Example:
+
+```json
+{
+  "max_normal_cycles": 5,
+  "max_reanalysis_cycles": 3,
+  "max_fix_attempts": 3,
+  "max_identical_states": 2,
+  "max_validation_failures": 3
+}
+```
+
+These are defaults, not hard-coded assumptions.
+
+Make them configurable.
+
+IMPORTANT:
+
+Do not automatically escalate to the fallback merely because a numerical limit was reached.
+
+First determine whether the system actually has evidence of failure or stagnation.
+
+---
+
+# 7. Progressive recovery
+
+Before invoking the LLM fallback, attempt progressively stronger recovery strategies.
+
+Use this order:
+
+```text
+LEVEL 0
+Normal reasoning
+
+        ↓
+
+LEVEL 1
+Re-run failed validator / worker
+
+        ↓
+
+LEVEL 2
+Targeted re-analysis
+
+        ↓
+
+LEVEL 3
+Ask different Worker perspective
+
+        ↓
+
+LEVEL 4
+Thinker contradiction analysis
+
+        ↓
+
+LEVEL 5
+Mirror reasoning
+
+        ↓
+
+LEVEL 6
+Orchestrator re-evaluation
+
+        ↓
+
+LEVEL 7
+Recovery strategy
+
+        ↓
+
+LEVEL 8
+LAST-RESORT LLM FALLBACK
+```
+
+The fallback must be impossible to reach casually.
+
+---
+
+# 8. Recovery strategy
+
+Create:
+
+```text
+RecoveryController
+```
+
+It should receive the failure context.
+
+Example:
+
+```json
+{
+  "failure_type": "validation_loop",
+  "cycles": 5,
+  "failed_hypotheses": [...],
+  "failed_fixes": [...],
+  "validation_errors": [...],
+  "state_fingerprints": [...],
+  "attempted_strategies": [...]
+}
+```
+
+The RecoveryController should determine:
+
+```text
+RETRY
+REANALYZE
+CHANGE_WORKER
+CHANGE_REASONING_STRATEGY
+RESET_ANALYSIS
+ESCALATE
+```
+
+---
+
+# 9. Important: do not reset blindly
+
+A reset must not erase useful evidence.
+
+Preserve:
+
+```text
+previous hypotheses
+failed hypotheses
+validation errors
+worker findings
+fix attempts
+reasons for rejection
+```
+
+The new analysis should know:
+
+```text
+"This approach already failed."
+```
+
+Otherwise the system may reproduce the same failure.
+
+---
+
+# 10. Last-resort LLM fallback
+
+Create a dedicated component:
+
+```text
+FallbackLLM
+```
+
+or:
+
+```text
+EmergencyReasoningAgent
+```
+
+This agent is fundamentally different from the normal Thinker.
+
+It exists only when the normal pipeline cannot make progress.
+
+It should receive the COMPLETE failure context.
+
+For example:
+
+```json
+{
+  "project_context": {...},
+  "worker_results": [...],
+  "thinker_results": [...],
+  "mirror_results": [...],
+  "orchestrator_results": [...],
+  "validation_results": [...],
+  "failed_fixes": [...],
+  "loop_history": [...],
+  "failure_reason": "...",
+  "attempted_strategies": [...]
+}
+```
+
+Do not give it only the latest error.
+
+It needs the complete trajectory.
+
+---
+
+# 11. Fallback role
+
+The Fallback LLM does NOT produce a final answer.
+
+It produces a:
+
+```text
+RECOVERY PROPOSAL
+```
+
+Example:
+
+```json
+{
+  "type": "recovery_proposal",
+  "diagnosis": "...",
+  "new_hypothesis": "...",
+  "proposed_strategy": "...",
+  "expected_effect": "...",
+  "confidence": 0.64,
+  "requires_validation": true
+}
+```
+
+The mandatory field is:
+
+```text
+requires_validation = true
+```
+
+Always.
+
+---
+
+# 12. Fallback cannot self-validate
+
+This rule is absolute.
+
+The fallback LLM cannot say:
+
+```text
+"The fix works."
+```
+
+and have that statement treated as validation.
+
+It can only say:
+
+```text
+"I propose this fix because..."
+```
+
+The proposal must go through:
+
+```text
+FallbackLLM
+     ↓
+Workers
+     ↓
+Thinker
+     ↓
+Validators
+     ↓
+Orchestrator
+```
+
+again.
+
+---
+
+# 13. Full pipeline restart after fallback
+
+This is extremely important.
+
+After the fallback generates a recovery proposal:
+
+```text
+DO NOT:
+
+Fallback
+ ↓
+Apply Fix
+```
+
+Instead:
+
+```text
+Fallback
+   ↓
+Recovery Proposal
+   ↓
+Project Re-analysis
+   ↓
+Workers
+   ↓
+Thinker
+   ↓
+Mirror
+   ↓
+Validators
+   ↓
+Orchestrator
+   ↓
+Decision
+```
+
+The fallback therefore re-enters the normal architecture.
+
+---
+
+# 14. Fallback-generated code
+
+If the fallback proposes code:
+
+```text
+FallbackLLM
+     ↓
+Patch Proposal
+```
+
+the patch must be treated exactly like a normal generated patch.
+
+It must go through:
+
+```text
+Patch
+ ↓
+Diff
+ ↓
+Validation
+ ↓
+Orchestrator
+ ↓
+User approval
+ ↓
+Apply
+```
+
+Never:
+
+```text
+Fallback
+ ↓
+Direct file modification
+```
+
+---
+
+# 15. Fallback trigger conditions
+
+The fallback should require MULTIPLE conditions whenever possible.
+
+For example:
+
+```text
+fallback_eligible =
+    loop_detected
+    AND
+    normal_recovery_exhausted
+    AND
+    validation_failure_persistent
+    AND
+    no_new_information_available
+```
+
+Do not trigger it simply because:
+
+```text
+one worker failed
+```
+
+or:
+
+```text
+one test failed
+```
+
+or:
+
+```text
+the Thinker is uncertain
+```
+
+Uncertainty is normal.
+
+The fallback is for **systemic inability to progress**.
+
+---
+
+# 16. Fallback cooldown
+
+After the fallback has been used once for a given analysis:
+
+```text
+fallback_used = true
+```
+
+Do not immediately invoke it again.
+
+The fallback should have a cooldown / maximum invocation count.
+
+Example:
+
+```json
+{
+  "max_fallback_invocations_per_analysis": 1
+}
+```
+
+Only a completely new analysis session should normally reset this.
+
+This prevents:
+
+```text
+Fallback
+ ↓
+fails
+ ↓
+Fallback
+ ↓
+fails
+ ↓
+Fallback
+ ↓
+...
+```
+
+---
+
+# 17. If fallback fails
+
+If the fallback proposal is rejected by the normal pipeline:
+
+```text
+Fallback
+ ↓
+Workers
+ ↓
+Thinker
+ ↓
+Validator
+ ↓
+Orchestrator
+ ↓
+REJECT
+```
+
+do NOT automatically invoke fallback again.
+
+Instead report:
+
+```text
+RECOVERY FAILED
+
+Normal reasoning exhausted.
+Emergency reasoning attempted.
+Emergency proposal failed validation.
+
+Human review required.
+```
+
+This is preferable to infinite autonomous reasoning.
+
+---
+
+# 18. Human escalation
+
+When the system cannot reach a validated state:
+
+```text
+SYSTEM_REQUIRES_REVIEW
+```
+
+The UI should show:
+
+```text
+┌──────────────────────────────────┐
+│ Agentic recovery exhausted       │
+│                                  │
+│ Normal attempts: 5               │
+│ Recovery attempts: 3             │
+│ Fallback attempts: 1             │
+│                                  │
+│ No validated solution found.     │
+│                                  │
+│ [ Review Analysis ]              │
+│ [ Export Report ]                │
+│ [ Try Again ]                    │
+└──────────────────────────────────┘
+```
+
+Do not hide failure behind an arbitrary generated answer.
+
+---
+
+# 19. Recovery state machine
+
+Implement an explicit state machine.
+
+Example:
+
+```text
+NORMAL
+  ↓
+ANALYZING
+  ↓
+VALIDATING
+  ↓
+ ┌───────────────┐
+ │               │
+PASS            FAIL
+ │               │
+ ▼               ▼
+SUCCESS       REANALYZE
+                  │
+                  ▼
+              LOOP CHECK
+                  │
+        ┌─────────┴─────────┐
+        │                   │
+     PROGRESS             STAGNATION
+        │                   │
+        ▼                   ▼
+     RETRY              RECOVERY
+                            │
+                            ▼
+                     RECOVERY EXHAUSTED
+                            │
+                            ▼
+                    LAST-RESORT FALLBACK
+                            │
+                            ▼
+                    FULL RE-ANALYSIS
+                            │
+                            ▼
+                    FULL VALIDATION
+                            │
+                  ┌─────────┴─────────┐
+                  │                   │
+                PASS                FAIL
+                  │                   │
+                  ▼                   ▼
+               SUCCESS          HUMAN REVIEW
+```
+
+---
+
+# 20. Prevent cross-agent ping-pong
+
+Agents must not directly call each other recursively.
+
+Bad:
+
+```text
+Worker → Thinker
+Thinker → Worker
+Worker → Thinker
+Thinker → Worker
+```
+
+Instead, all transitions go through the controller:
+
+```text
+Worker
+  ↓
+Controller
+  ↓
+Thinker
+  ↓
+Controller
+  ↓
+Orchestrator
+```
+
+The controller owns the workflow.
+
+This is essential.
+
+---
+
+# 21. No hidden recursion
+
+Do not allow:
+
+```python
+thinker.call(worker)
+worker.call(thinker)
+orchestrator.call(thinker)
+thinker.call(orchestrator)
+```
+
+Instead use explicit events:
+
+```text
+WORKER_COMPLETE
+THINKER_COMPLETE
+VALIDATION_FAILED
+ORCHESTRATOR_REJECTED
+LOOP_DETECTED
+RECOVERY_REQUESTED
+FALLBACK_REQUESTED
+```
+
+The controller processes these events.
+
+---
+
+# 22. Event-driven recovery
+
+Create events such as:
+
+```text
+ANALYSIS_STARTED
+ANALYSIS_COMPLETED
+
+VALIDATION_STARTED
+VALIDATION_FAILED
+VALIDATION_PASSED
+
+ORCHESTRATOR_ACCEPTED
+ORCHESTRATOR_REJECTED
+
+LOOP_DETECTED
+STAGNATION_DETECTED
+
+RECOVERY_STARTED
+RECOVERY_FAILED
+RECOVERY_EXHAUSTED
+
+FALLBACK_STARTED
+FALLBACK_COMPLETED
+
+HUMAN_REVIEW_REQUIRED
+```
+
+This makes the entire recovery system observable.
+
+---
+
+# 23. Recovery provenance
+
+Every fallback invocation must record:
+
+```text
+fallback_id
+analysis_id
+trigger_reason
+failure_history
+attempted_strategies
+input_context_hash
+output
+validation_result
+orchestrator_decision
+```
+
+Example:
+
+```json
+{
+  "fallback_id": "fallback-20260811-1432",
+  "trigger_reason": "repeated_validation_failure",
+  "normal_cycles": 5,
+  "recovery_cycles": 3,
+  "fallback_attempt": 1,
+  "result": "rejected"
+}
+```
+
+---
+
+# 24. UI integration
+
+The UI should show the current recovery state.
+
+Example:
+
+```text
+Normal Analysis
+      ✓
+
+Worker Analysis
+      ✓
+
+Thinker
+      ✓
+
+Orchestrator
+      ✗
+
+Re-analysis
+      ✓
+
+Validation
+      ✗
+
+Loop detected
+      ⚠
+
+Recovery
+      ✓
+
+Last-resort fallback
+      ● RUNNING
+```
+
+The user should know when the emergency path is being used.
+
+---
+
+# 25. Fallback should be rare
+
+The UI should make this explicit:
+
+```text
+Fallback: LAST RESORT
+```
+
+Do not expose a large obvious "Fallback" button next to normal operations.
+
+It should be controlled by the recovery system.
+
+Optionally provide an advanced setting:
+
+```text
+Enable emergency fallback:
+    ON / OFF
+```
+
+Default:
+
+```text
+ON
+```
+
+but with strict trigger conditions.
+
+---
+
+# 26. Metrics
+
+Track whether the fallback is actually useful.
+
+Measure:
+
+```text
+normal_success_rate
+normal_average_cycles
+loop_detection_rate
+recovery_success_rate
+fallback_invocation_rate
+fallback_success_rate
+fallback_rejection_rate
+human_escalation_rate
+time_to_resolution
+```
+
+The system should eventually answer:
+
+```text
+"How often does the emergency LLM actually save an otherwise failed analysis?"
+```
+
+If fallback usage becomes frequent, this is a signal that the normal architecture needs improvement.
+
+---
+
+# 27. Important architectural principle
+
+The fallback is NOT:
+
+```text
+the smarter agent
+```
+
+It is:
+
+```text
+the emergency source of a new hypothesis
+```
+
+Its purpose is to break a deadlock by introducing a genuinely different reasoning path.
+
+After doing that, it loses authority.
+
+The normal validation architecture takes over again.
+
+---
+
+# 28. Complete workflow
+
+The final system should behave like this:
+
+```text
+                  ┌──────────────┐
+                  │    PROJECT   │
+                  └──────┬───────┘
+                         ↓
+                    ┌─────────┐
+                    │ WORKERS │
+                    └────┬────┘
+                         ↓
+                    ┌─────────┐
+                    │ THINKER │
+                    └────┬────┘
+                         ↓
+                   ┌──────────┐
+                   │  MIRROR  │
+                   └────┬─────┘
+                        ↓
+                  ┌────────────┐
+                  │ VALIDATORS │
+                  └──────┬─────┘
+                         ↓
+                 ┌──────────────┐
+                 │ ORCHESTRATOR │
+                 └──────┬───────┘
+                        │
+                 ┌──────┴──────┐
+                 │             │
+               VALID         INVALID
+                 │             │
+                 ↓             ↓
+               RESULT       RECOVERY
+                               │
+                        ┌──────┴──────┐
+                        │             │
+                    PROGRESS       DEADLOCK
+                        │             │
+                        ↓             ↓
+                    REANALYZE    LAST-RESORT
+                                      │
+                                      ▼
+                                 FALLBACK LLM
+                                      │
+                                      ▼
+                              RECOVERY PROPOSAL
+                                      │
+                                      ▼
+                                  WORKERS
+                                      │
+                                      ▼
+                                  THINKER
+                                      │
+                                      ▼
+                                  MIRROR
+                                      │
+                                      ▼
+                                 VALIDATORS
+                                      │
+                                      ▼
+                                ORCHESTRATOR
+                                      │
+                              ┌───────┴───────┐
+                              │               │
+                            ACCEPT          REJECT
+                              │               │
+                              ▼               ▼
+                           RESULT       HUMAN REVIEW
+```
+
+---
+
+# 29. Absolute rules
+
+These rules must never be violated:
+
+```text
+RULE 1:
+No infinite loops.
+
+RULE 2:
+No uncontrolled recursive agent calls.
+
+RULE 3:
+The Thinker cannot make the final decision.
+
+RULE 4:
+The fallback cannot make the final decision.
+
+RULE 5:
+The fallback cannot validate itself.
+
+RULE 6:
+Fallback output must re-enter the normal pipeline.
+
+RULE 7:
+A failed fallback cannot automatically trigger another fallback.
+
+RULE 8:
+No code modification without the normal validation/apply pipeline.
+
+RULE 9:
+Preserve complete failure history.
+
+RULE 10:
+If autonomous recovery is exhausted, stop and request human review.
+```
+
+The philosophy is:
+
+```text
+TRY NORMAL REASONING
+        ↓
+DETECT FAILURE
+        ↓
+RECOVER
+        ↓
+TRY AGAIN
+        ↓
+ONLY THEN USE FALLBACK
+        ↓
+RE-ENTER NORMAL VALIDATION
+        ↓
+IF STILL FAILED → STOP
+```
+
+The fallback exists to introduce a new hypothesis, not to bypass the architecture.
+
+The Orchestrator remains the final reasoning authority.
+
+The Validator remains independent.
+
+The user remains the final authority for filesystem-changing actions.
+

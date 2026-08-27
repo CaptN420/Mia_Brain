@@ -1,0 +1,35 @@
+runtime.log
+.venv/
+__pycache__/
+# Secrets — never commit
+.captn/
+.captn_token
+.captn/openai_config.json
+.captn.acl.bak
+# Environment files (real secrets go in .env, never committed)
+.env
+.env.*
+!.env.example
+# Runtime / crawler output (generated at runtime, not source)
+generated/
+crawled/
+_converted/
+mirror/
+dogfood-output/
+nul
+cloudflared.log
+autogen.log
+autocrawl.log
+raw2json.log
+raw2json.progress.json
+mia_evolution.log
+*.progress.json
+# Vendored / mirrored third-party tree (not project source)
+Code_base/
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+*.swp
+
+# Runtime session artifacts (generated at runtime, large)
+mia/session/

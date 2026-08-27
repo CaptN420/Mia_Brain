@@ -1,0 +1,1329 @@
+# TASK — Implement the Complete Agentic Code Analysis & Fix Workflow
+
+We need to finish the application's main code-analysis workflow.
+
+The application should become a self-contained environment where a user can:
+
+1. load a Python project/folder;
+2. analyze it using Workers + Thinker + Orchestrator;
+3. generate a proposed fix;
+4. inspect the proposed changes;
+5. validate/test the fix;
+6. apply the fix;
+7. rollback the fix if necessary;
+8. run the Python project directly from the application.
+
+The user should NOT need to leave the application and manually use the terminal for the normal workflow.
+
+---
+
+# 1. Target user workflow
+
+Implement this workflow:
+
+```text
+LOAD PROJECT
+     ↓
+ANALYZE
+     ↓
+WORKERS
+     ↓
+THINKER
+     ↓
+ORCHESTRATOR
+     ↓
+ANALYSIS REPORT
+     ↓
+GENERATE FIX
+     ↓
+FIX PREVIEW / DIFF
+     ↓
+VALIDATE FIX
+     ↓
+APPLY FIX
+     ↓
+RUN
+     ↓
+RESULT
+```
+
+And:
+
+```text
+APPLY FIX
+    ↓
+ROLLBACK
+```
+
+must always remain available when a reversible change exists.
+
+---
+
+# 2. Main UI buttons
+
+The main interface should expose these actions:
+
+```text
+[ Load Folder ]
+
+[ Analyze ]
+
+[ Generate Fix ]
+
+[ Preview Diff ]
+
+[ Validate Fix ]
+
+[ Apply Fix ]
+
+[ Rollback ]
+
+[ Run ]
+
+[ Stop ]
+```
+
+The buttons should have clear enabled/disabled states.
+
+Do not allow invalid actions.
+
+For example:
+
+```text
+No project loaded
+    → Analyze disabled
+    → Generate Fix disabled
+    → Apply Fix disabled
+    → Run disabled
+```
+
+After loading:
+
+```text
+Project loaded
+    → Analyze enabled
+    → Run enabled
+```
+
+After analysis:
+
+```text
+Analysis complete
+    → Generate Fix enabled
+```
+
+After a fix is generated:
+
+```text
+Fix available
+    → Preview Diff enabled
+    → Validate Fix enabled
+    → Apply Fix enabled only after validation policy permits it
+```
+
+---
+
+# 3. LOAD FOLDER
+
+Implement a proper project loader.
+
+The user should be able to select a folder containing a Python project.
+
+After loading, display:
+
+```text
+Project:
+    /path/to/project
+
+Files:
+    42
+
+Python files:
+    17
+
+Entry points:
+    main.py
+    app.py
+    ...
+
+Virtual environment:
+    detected / not detected
+
+Git repository:
+    detected / not detected
+```
+
+Do not automatically analyze every file blindly.
+
+Create a project manifest.
+
+Example:
+
+```json
+{
+    "root": "/project",
+    "python_files": [],
+    "entry_points": [],
+    "excluded_paths": [],
+    "venv": null,
+    "git": true
+}
+```
+
+---
+
+# 4. Project indexing
+
+Before Workers analyze the project, create an indexed representation.
+
+Detect:
+
+```text
+.py files
+imports
+classes
+functions
+modules
+entry points
+tests
+requirements.txt
+pyproject.toml
+setup.py
+tox.ini
+pytest configuration
+virtual environments
+.git
+```
+
+Exclude by default:
+
+```text
+.git/
+.venv/
+venv/
+__pycache__/
+node_modules/
+dist/
+build/
+*.pyc
+```
+
+Make exclusions configurable.
+
+---
+
+# 5. ANALYZE button
+
+The Analyze button starts the agentic pipeline.
+
+```text
+Analyze
+   ↓
+Project Scanner
+   ↓
+Workers
+   ↓
+Thinker
+   ↓
+Validators
+   ↓
+Orchestrator
+   ↓
+Analysis Report
+```
+
+The UI should show live progress.
+
+Example:
+
+```text
+Analyzing project...
+
+✓ Project scanned
+✓ 17 Python files discovered
+✓ Worker: syntax analysis
+✓ Worker: dependency analysis
+✓ Worker: bug analysis
+✓ Worker: architecture analysis
+✓ Thinker: cross-analysis
+✓ Validator: consistency check
+✓ Orchestrator: final synthesis
+
+Analysis complete.
+```
+
+Do not freeze the UI while analysis is running.
+
+Use asynchronous/background execution appropriate for the existing framework.
+
+---
+
+# 6. WORKERS
+
+Workers should remain specialized.
+
+Do not turn the Thinker into a Worker.
+
+Example worker roles:
+
+```text
+Syntax Worker
+Bug Worker
+Dependency Worker
+Security Worker
+Architecture Worker
+Test Worker
+Performance Worker
+```
+
+Only instantiate workers that are relevant to the project.
+
+Each Worker returns structured findings.
+
+Example:
+
+```json
+{
+    "worker": "syntax",
+    "file": "app/main.py",
+    "line": 42,
+    "severity": "error",
+    "finding": "...",
+    "evidence": "..."
+}
+```
+
+---
+
+# 7. THINKER
+
+The Thinker receives Worker results.
+
+It:
+
+```text
+cross-correlates findings
+detects contradictions
+generates hypotheses
+identifies root causes
+proposes solutions
+evaluates alternative explanations
+```
+
+The Thinker is advisory.
+
+It cannot directly modify files.
+
+Its output must contain:
+
+```text
+analysis
+hypotheses
+evidence
+alternatives
+recommendations
+confidence
+validation_required
+```
+
+---
+
+# 8. ORCHESTRATOR
+
+The Orchestrator receives:
+
+```text
+Worker results
+Thinker reasoning
+Mirror reasoning if available
+Validator results
+Project context
+```
+
+It decides what findings are sufficiently supported.
+
+The Orchestrator must NOT blindly trust the Thinker.
+
+It should classify findings:
+
+```text
+CONFIRMED
+PROBABLE
+POSSIBLE
+UNCONFIRMED
+REJECTED
+```
+
+Then produce the final analysis report.
+
+---
+
+# 9. ANALYSIS REPORT
+
+Create a dedicated UI panel.
+
+Display:
+
+```text
+PROJECT HEALTH
+
+Critical:
+    2
+
+Errors:
+    5
+
+Warnings:
+    11
+
+Suggestions:
+    8
+```
+
+Then findings:
+
+```text
+[CRITICAL] app/main.py:42
+
+Problem:
+...
+
+Evidence:
+...
+
+Likely cause:
+...
+
+Suggested solution:
+...
+
+Confidence:
+87%
+
+Validation:
+Required
+```
+
+Allow the user to select which finding should receive a fix.
+
+Do not automatically generate fixes for every finding.
+
+---
+
+# 10. GENERATE FIX
+
+The Generate Fix button should work on a selected finding.
+
+Pipeline:
+
+```text
+Selected finding
+       ↓
+Fix Planner
+       ↓
+Thinker
+       ↓
+Orchestrator
+       ↓
+Patch Generator
+       ↓
+Proposed Fix
+```
+
+The Fix Generator must NOT immediately modify files.
+
+It produces a patch.
+
+Preferred representation:
+
+```diff
+--- a/app/main.py
++++ b/app/main.py
+@@
+- old code
++ new code
+```
+
+Internally, preserve enough information to reverse the patch.
+
+---
+
+# 11. FIX PREVIEW / DIFF
+
+This is an important feature.
+
+Add a Diff Viewer.
+
+The user must be able to see:
+
+```text
+FILE: app/main.py
+
+- old line
++ new line
+```
+
+Show:
+
+```text
+Files changed: 2
+Lines added: 14
+Lines removed: 7
+```
+
+The user should explicitly understand what will change before applying it.
+
+Add:
+
+```text
+[ Accept Fix ]
+[ Reject Fix ]
+```
+
+if appropriate.
+
+---
+
+# 12. VALIDATE FIX
+
+Before Apply Fix, run validation.
+
+The validation pipeline should preferably use a temporary workspace/copy.
+
+Never use the user's live project as the first validation environment when this can be avoided.
+
+Validation can include:
+
+```text
+Python syntax compilation
+import validation
+unit tests
+pytest
+static analysis
+type checking if configured
+dependency validation
+application startup test
+```
+
+Use only tools that are actually available in the environment.
+
+Report:
+
+```text
+Validation
+
+✓ Syntax
+✓ Imports
+✓ Unit tests: 37 passed
+✓ Static checks
+
+Result:
+PASS
+```
+
+or:
+
+```text
+Validation
+
+✓ Syntax
+✗ Unit tests: 3 failed
+
+Result:
+FAILED
+```
+
+If validation fails, do NOT automatically apply the fix.
+
+---
+
+# 13. APPLY FIX
+
+Apply Fix should only modify the real project after the appropriate validation policy has passed.
+
+Before modification:
+
+```text
+Create backup/snapshot
+Verify patch
+Verify target files unchanged since analysis
+```
+
+Important:
+
+If the files changed since the analysis, refuse to blindly apply the patch.
+
+Display:
+
+```text
+Project changed since analysis.
+
+Please analyze again before applying this fix.
+```
+
+This prevents stale patches from overwriting user work.
+
+---
+
+# 14. BACKUP / SNAPSHOT
+
+Every applied fix must have a recoverable snapshot.
+
+Possible implementations:
+
+### Preferred
+
+Use Git when the project is a Git repository.
+
+Create a dedicated checkpoint before applying the patch.
+
+Example concept:
+
+```text
+agentic-fix/<timestamp>
+```
+
+Do not destroy or overwrite the user's existing Git history.
+
+### Non-Git projects
+
+Create an application-managed snapshot:
+
+```text
+.project-agent-backups/
+    2026-08-11_08-30-12/
+```
+
+The snapshot should contain:
+
+```text
+modified files
+original contents
+metadata
+fix ID
+analysis ID
+timestamp
+```
+
+Never silently delete backups.
+
+---
+
+# 15. ROLLBACK
+
+Rollback should restore the state immediately before the selected fix.
+
+Example:
+
+```text
+Fix #17
+Applied:
+    app/main.py
+    app/utils.py
+
+[ Rollback ]
+```
+
+Before rollback:
+
+```text
+Are you sure?
+This will restore the previous state of:
+    app/main.py
+    app/utils.py
+```
+
+Again, if the user modified those files after the fix, detect this.
+
+Do not overwrite user changes silently.
+
+Use:
+
+```text
+SAFE ROLLBACK
+```
+
+rather than blindly copying old files over current files.
+
+---
+
+# 16. RUN button
+
+Add a Run button so the user can execute the project without opening a terminal.
+
+The user should be able to select:
+
+```text
+Entry point:
+    main.py
+    app.py
+    custom command
+```
+
+and optionally configure:
+
+```text
+Python interpreter
+Working directory
+Environment variables
+Arguments
+```
+
+Example UI:
+
+```text
+Python:
+[ .venv/bin/python ]
+
+Entry:
+[ main.py ]
+
+Arguments:
+[ ]
+
+Working directory:
+[ project root ]
+
+[ RUN ]
+[ STOP ]
+```
+
+---
+
+# 17. Process runner
+
+Implement a proper process manager.
+
+It must:
+
+```text
+start process
+capture stdout
+capture stderr
+display exit code
+display runtime
+allow termination
+detect crashes
+```
+
+Output should appear inside the application:
+
+```text
+┌─────────────────────────────┐
+│ Runtime Console             │
+├─────────────────────────────┤
+│ $ python main.py             │
+│                              │
+│ Server started on port 8000 │
+│ ...                          │
+│                              │
+│ Process running              │
+└─────────────────────────────┘
+
+[ STOP ]
+```
+
+Do not block the UI thread.
+
+Use subprocess management appropriate for the current Python/UI framework.
+
+---
+
+# 18. RUN safety
+
+The Run system should never execute arbitrary commands merely because an agent suggested them.
+
+The user explicitly chooses what to run.
+
+If the system generates a command, display it before execution.
+
+Example:
+
+```text
+Command:
+
+/project/.venv/bin/python /project/main.py
+
+[ Run ]
+[ Cancel ]
+```
+
+The user remains in control.
+
+---
+
+# 19. Environment detection
+
+When loading the project, detect:
+
+```text
+.venv/
+venv/
+virtualenv
+pyproject.toml
+requirements.txt
+Poetry
+Pipenv
+Conda
+system Python
+```
+
+Prefer the project's own virtual environment.
+
+Display the interpreter being used.
+
+Example:
+
+```text
+Python Environment
+
+Interpreter:
+    /project/.venv/bin/python
+
+Version:
+    Python 3.10.12
+```
+
+Allow the user to change it.
+
+---
+
+# 20. State machine
+
+Do NOT implement the buttons as independent random callbacks.
+
+Create an explicit application state machine.
+
+Example:
+
+```text
+EMPTY
+  ↓
+PROJECT_LOADED
+  ↓
+ANALYZING
+  ↓
+ANALYZED
+  ↓
+GENERATING_FIX
+  ↓
+FIX_READY
+  ↓
+VALIDATING
+  ↓
+FIX_VALIDATED
+  ↓
+APPLYING
+  ↓
+FIX_APPLIED
+  ↓
+RUNNING
+```
+
+Possible transitions:
+
+```text
+FIX_READY → REJECTED
+FIX_VALIDATED → FIX_FAILED
+FIX_APPLIED → ROLLED_BACK
+RUNNING → STOPPED
+```
+
+The UI should derive button availability from the state.
+
+---
+
+# 21. Operation history
+
+Add an operation history panel.
+
+Example:
+
+```text
+08:31  Project loaded
+08:32  Analysis started
+08:33  Analysis completed
+08:34  Fix generated
+08:35  Fix validated
+08:36  Fix applied
+08:37  Project executed
+```
+
+Each operation should have an ID.
+
+Example:
+
+```text
+analysis-20260811-0832
+fix-20260811-0834
+snapshot-20260811-0835
+run-20260811-0837
+```
+
+This will make debugging the agentic workflow much easier.
+
+---
+
+# 22. Important: immutable evidence
+
+Once an analysis has been generated, preserve:
+
+```text
+project state/hash
+worker results
+Thinker output
+Orchestrator decision
+validation results
+generated patch
+```
+
+This creates a traceable chain:
+
+```text
+PROJECT STATE
+      ↓
+ANALYSIS
+      ↓
+REASONING
+      ↓
+DECISION
+      ↓
+PATCH
+      ↓
+VALIDATION
+      ↓
+APPLICATION
+      ↓
+RESULT
+```
+
+This is extremely important for debugging and reproducibility.
+
+---
+
+# 23. Diff integrity
+
+Before applying a patch:
+
+```text
+original file hash
+current file hash
+```
+
+must match the expected state.
+
+If not:
+
+```text
+PATCH INVALIDATED
+```
+
+and require re-analysis or patch regeneration.
+
+---
+
+# 24. Error handling
+
+Every stage must fail gracefully.
+
+Examples:
+
+```text
+Worker failed
+Thinker failed
+Orchestrator failed
+Patch generation failed
+Validation failed
+Patch application failed
+Process crashed
+Rollback failed
+```
+
+Never leave the application in an unknown state.
+
+Display the exact stage that failed.
+
+Example:
+
+```text
+Fix application failed.
+
+Stage:
+    PATCH_APPLY
+
+Reason:
+    Target file changed externally.
+
+No changes were applied.
+```
+
+---
+
+# 25. Logging
+
+Create structured logs for:
+
+```text
+UI actions
+agent calls
+worker results
+Thinker reasoning
+Orchestrator decisions
+patch generation
+validation
+file modifications
+rollback
+process execution
+```
+
+Use structured JSON where appropriate.
+
+Do not log secrets or environment variables containing credentials.
+
+---
+
+# 26. Security
+
+Treat the loaded project as untrusted input.
+
+Do not allow:
+
+```text
+agent-generated shell commands
+```
+
+to execute automatically.
+
+Do not expose:
+
+```text
+API keys
+tokens
+passwords
+SSH keys
+.env secrets
+```
+
+to agents unnecessarily.
+
+Add secret-file detection/exclusion.
+
+At minimum consider:
+
+```text
+.env
+.env.*
+*.pem
+*.key
+credentials.*
+secrets.*
+```
+
+Do not send those files to an LLM unless explicitly authorized.
+
+---
+
+# 27. UX improvements
+
+Add:
+
+```text
+Cancel Analysis
+Cancel Fix Generation
+Cancel Validation
+Stop Running Program
+```
+
+Long-running operations should display progress.
+
+Add status indicators:
+
+```text
+● Idle
+● Working
+● Success
+● Warning
+● Error
+```
+
+Also add a small activity/log panel so the user understands what the agents are doing.
+
+---
+
+# 28. Recommended additional feature: TEST AFTER APPLY
+
+After applying a fix, offer:
+
+```text
+[ Run Tests ]
+```
+
+This creates:
+
+```text
+Apply Fix
+   ↓
+Run Tests
+   ↓
+PASS → Keep
+FAIL → Offer Rollback
+```
+
+Do not automatically rollback unless the user explicitly enables an auto-rollback policy.
+
+---
+
+# 29. Recommended additional feature: FIX QUEUE
+
+Allow multiple findings to be selected:
+
+```text
+☑ Fix #12
+☑ Fix #15
+☐ Fix #18
+☐ Fix #22
+```
+
+But generate and validate fixes independently first.
+
+Do not merge unrelated fixes automatically.
+
+---
+
+# 30. Recommended additional feature: READ-ONLY MODE
+
+Add:
+
+```text
+READ-ONLY MODE
+```
+
+When enabled:
+
+```text
+Analyze       ✓
+Generate Fix  ✓
+Preview Diff  ✓
+Validate      ✓
+Apply Fix     ✗
+Rollback      ✗
+```
+
+This is useful when reviewing an unfamiliar repository.
+
+---
+
+# 31. Recommended additional feature: DRY RUN
+
+Add:
+
+```text
+DRY RUN
+```
+
+which executes:
+
+```text
+Analyze
+→ Generate Fix
+→ Validate
+→ Show Diff
+```
+
+without modifying the real project.
+
+This should become one of the safest ways to test the agentic system.
+
+---
+
+# 32. Recommended additional feature: project configuration
+
+Create a project-level configuration file, for example:
+
+```text
+.agentic/
+    config.json
+```
+
+Possible settings:
+
+```json
+{
+  "python": ".venv/bin/python",
+  "entrypoint": "main.py",
+  "test_command": "pytest",
+  "auto_validate": true,
+  "auto_apply": false,
+  "read_only": false,
+  "excluded_paths": [],
+  "max_workers": 6
+}
+```
+
+Do not enable automatic application by default.
+
+---
+
+# 33. Architecture requirement
+
+Keep responsibilities separated.
+
+```text
+ProjectManager
+      │
+      ├── ProjectLoader
+      ├── ProjectIndexer
+      └── EnvironmentDetector
+
+AgentSystem
+      │
+      ├── Workers
+      ├── Thinker
+      ├── MirrorAgent
+      ├── Validators
+      └── Orchestrator
+
+FixSystem
+      │
+      ├── FixPlanner
+      ├── PatchGenerator
+      ├── DiffViewer
+      ├── PatchValidator
+      ├── PatchApplier
+      └── RollbackManager
+
+RuntimeSystem
+      │
+      ├── PythonEnvironment
+      ├── ProcessManager
+      ├── Console
+      └── RunConfiguration
+
+Persistence
+      │
+      ├── Snapshots
+      ├── OperationHistory
+      └── Logs
+```
+
+Do not put all functionality inside the UI launcher.
+
+The UI should orchestrate the components rather than implement all the logic itself.
+
+---
+
+# 34. Implementation strategy
+
+Before changing the codebase:
+
+1. Inspect the existing project.
+2. Identify the current UI launcher.
+3. Identify the existing Worker architecture.
+4. Identify the existing Thinker.
+5. Identify the existing Orchestrator.
+6. Identify existing file-management utilities.
+7. Identify existing test/debug tools.
+8. Identify existing subprocess/runtime functionality.
+9. Reuse existing abstractions where possible.
+
+Then produce a short implementation plan.
+
+Do not rewrite working components unnecessarily.
+
+Implement incrementally:
+
+### Phase 1
+
+```text
+Load Folder
+Project Index
+Analyze
+Workers
+Thinker
+Orchestrator
+Analysis Report
+```
+
+### Phase 2
+
+```text
+Generate Fix
+Diff Viewer
+Validation
+```
+
+### Phase 3
+
+```text
+Snapshots
+Apply Fix
+Rollback
+```
+
+### Phase 4
+
+```text
+Python Environment
+Run
+Stop
+Console
+```
+
+### Phase 5
+
+```text
+History
+Dry Run
+Read-only
+Test-after-apply
+Project configuration
+```
+
+---
+
+# 35. Final acceptance criteria
+
+The implementation is considered complete when a user can perform this entire workflow without opening a terminal:
+
+```text
+1. Open application
+2. Click Load Folder
+3. Select Python project
+4. Click Analyze
+5. Workers analyze project
+6. Thinker cross-checks findings
+7. Orchestrator validates/synthesizes findings
+8. User selects a problem
+9. Click Generate Fix
+10. View proposed patch
+11. Validate patch
+12. Review diff
+13. Apply Fix
+14. Run project
+15. View stdout/stderr
+16. Stop project
+17. Run tests
+18. Rollback fix if necessary
+```
+
+The most important principle is:
+
+```text
+ANALYZE ≠ MODIFY
+GENERATE FIX ≠ APPLY FIX
+APPLY FIX ≠ TRUST FIX
+RUN ≠ AGENT AUTHORITY
+```
+
+The agentic system proposes and reasons.
+
+The application validates.
+
+The user remains in control.
+
+The Orchestrator decides what the agents' reasoning means.
+
+The filesystem is modified only through the controlled FixSystem.
+
+Build this incrementally and preserve the existing architecture wherever possible.
+

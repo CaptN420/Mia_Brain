@@ -1,0 +1,37 @@
+# ============================================================================
+# Caddy reverse proxy for captn-server024.org -> local Captn dashboard
+#
+# - Automatic HTTPS via Let's Encrypt (no cert juggling)
+# - Forwards real client IP in X-Forwarded-For (used by Captn's auth gate)
+# - Blocks nothing else; auth is enforced by the Streamlit app itself
+#
+# Place at /etc/caddy/Caddyfile (Linux) or C:\caddy\Caddyfile (Windows).
+# ============================================================================
+
+captn-server024.org {
+    # Automatic HTTPS is implicit with a domain; explicit for clarity:
+    tls internal-contact@example.com   # CHANGE: your real email for cert notices
+
+    # Streamlit speaks plain HTTP behind the proxy.
+    reverse_proxy 127.0.0.1:8501 {
+        # WebSockets are required by Streamlit - Caddy handles upgrade
+        # automatically, but flush immediately for live logs:
+        flush_interval -1
+    }
+
+    # Basic hardening headers
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        -Server
+    }
+
+    # Optional: rate-limit login attempts at the edge (Caddy >= 2.8 with
+    # rate_limit module) - otherwise the app's own 1.5s damping applies.
+}
+
+# Optional convenience: redirect www
+www.captn-server024.org {
+    redir https://captn-server024.org{uri} permanent
+}

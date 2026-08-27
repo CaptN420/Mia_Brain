@@ -1,0 +1,21 @@
+cff-version: 1.0
+message: "If you use this work, please cite it as:"
+title: "Captn: An Experimental Deterministic Agent Runtime"
+authors:
+  - family: Martin
+    given: Célestin
+    orcid: ""
+publisher: "Independent Research"
+year: 2026
+type: Software
+url: "https://github.com/CaptN420/CaptN-BRAIN"
+keywords:
+  - agents
+  - deterministic
+  - runtime
+  - orchestration
+software:
+  - name: Gemma 4
+    version: "12B Quantized"
+  - name: LM Studio
+  - name: Hermes Agent

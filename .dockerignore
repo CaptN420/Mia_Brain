@@ -1,0 +1,31 @@
+# Secrets — NEVER bake into the image (mount at runtime instead)
+.captn/
+.captn_token
+
+# VCS / tooling
+.git/
+.venv/
+__pycache__/
+*.pyc
+*.log
+.runtime.log
+*.progress.json
+
+# wd-40 runtime state (use volumes so the container can write here)
+wd-40/logs/
+wd-40/feeds/
+wd-40/sandbox/
+wd-40/quarantine/
+
+# Generated / crawled runtime data (use volumes)
+generated/
+crawled/
+_converted/
+mirror/
+dogfood-output/
+
+# Local deployment artifacts
+deploy/
+
+# Vendored / mirrored third-party tree (not project source, blows up image)
+Code_base/

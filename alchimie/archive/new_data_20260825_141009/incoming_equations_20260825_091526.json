@@ -1,0 +1,35 @@
+{
+  "rules": [
+    {
+      "id": "equation.ndot________a___δc_____l_____0_5.v1",
+      "name": "Ndot = (( * A * ΔC ) / L) ** 0.5",
+      "type": "transformation",
+      "domain": "general",
+      "definition": "Equation approuvee par debat MIA",
+      "unit": "",
+      "measure": "",
+      "role": "",
+      "links": [
+        "Ndot = (( * A * ΔC ) / L) ** 0.5"
+      ],
+      "status": "candidate",
+      "experimental": true,
+      "version": "1.0.0",
+      "source": "mia_debate",
+      "description": "Ndot = (( * A * ΔC ) / L) ** 0.5",
+      "constraints": [],
+      "validation": {
+        "tested": false,
+        "tests": []
+      },
+      "family": "general",
+      "micro_equation": "Ndot = (( * A * ΔC ) / L) ** 0.5",
+      "experiment": "",
+      "approved": false,
+      "source_turn": 0,
+      "source_agent": "MIA",
+      "validation_summary": "Equation: Ndot = (( * A * ΔC ) / L) ** 0.5",
+      "source_session": "alchemy_session_20260825_033116"
+    }
+  ]
+}
