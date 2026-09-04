@@ -18,6 +18,7 @@ class MirrorAgent:
     """Agent that performs mathematical and logical mirror transformations."""
     
     name = "mirror_agent"
+    _initialized = False  # class-level flag: log init message once only
     
     def __init__(self, bus=None, alchimie_manager=None):
         self.bus = bus
@@ -36,7 +37,9 @@ class MirrorAgent:
         
     def initialize(self) -> bool:
         """Initialize the MirrorAgent with mirror rules and math validator."""
-        logger.info(f"[{self.name}] Initializing MirrorAgent with mirror rules and math validator...")
+        if not MirrorAgent._initialized:
+            logger.info(f"[{self.name}] Initializing MirrorAgent with mirror rules and math validator...")
+            MirrorAgent._initialized = True
         return True
         
     def execute(self, message: Dict[str, Any]) -> None:

@@ -27,6 +27,7 @@ class MathValidator:
             "CONTRADICTORY",
             "REQUIRES_NUMERICAL_TEST"
         ]
+        self._seen_expressions: set[str] = set()
         
     def validate_transformation(self, transformation: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -53,7 +54,10 @@ class MathValidator:
             "validation_timestamp": self._get_timestamp()
         }
         
-        logger.info(f"MathValidator: Validated transformation '{expression}' as {classification}")
+        # Log only once per unique expression to avoid spam in loops
+        if expression not in self._seen_expressions:
+            self._seen_expressions.add(expression)
+            logger.info(f"MathValidator: Validated transformation '{expression}' as {classification}")
         return validation_result
         
     def _classify_transformation(self, rule_used: str, expression: str) -> str:

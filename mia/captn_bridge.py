@@ -42,9 +42,24 @@ DOMAIN_KEYWORDS = {
 
 
 class CaptnBridge:
-    """Bridge exposing captn thinkers/workers to the MIA debate runtime."""
+    """Bridge exposing captn thinkers/workers to the MIA debate runtime.
+    
+    Singleton: one bridge per process. Components (Thinker, MathValidator,
+    MirrorAgent) are initialized once and reused across debate sessions.
+    """
+    
+    _instance = None
+
+    def __new__(cls, cfg=None):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
 
     def __init__(self, cfg=None):
+        if self._initialized:
+            return
+        self._initialized = True
         self.cfg = cfg
         self.available = False
         self.thinker = None
@@ -59,23 +74,30 @@ class CaptnBridge:
     # Init
     # ------------------------------------------------------------------
     def _init_captn_components(self) -> None:
-        """Import captn runtime components lazily; degrade gracefully."""
+        """Import captn runtime components lazily; degrade gracefully.
+        
+        Each component is cached on the instance so re-initialization
+        (e.g. when BaseDebateCore is recreated) reuses the same objects.
+        """
         try:
             from captn.runtime.thinker import Thinker  # noqa: E402
-            self.thinker = Thinker(alchimie_manager=None)
+            if self.thinker is None:
+                self.thinker = Thinker(alchimie_manager=None)
             self.available = True
         except Exception as exc:  # pragma: no cover
             print(f"[BRIDGE] captn Thinker indisponible: {type(exc).__name__}: {exc}")
         try:
             from tools.math_validator import MathValidator  # noqa: E402
-            self.math_validator = MathValidator()
+            if self.math_validator is None:
+                self.math_validator = MathValidator()
             self.available = True
         except Exception as exc:
             print(f"[BRIDGE] captn MathValidator indisponible: {exc}")
         try:
             from captn.runtime.mirror_agent import MirrorAgent  # noqa: E402
-            self.mirror_agent = MirrorAgent(bus=None, alchimie_manager=None)
-            self.mirror_agent.initialize()
+            if self.mirror_agent is None:
+                self.mirror_agent = MirrorAgent(bus=None, alchimie_manager=None)
+                self.mirror_agent.initialize()
             self.available = True
         except Exception as exc:
             print(f"[BRIDGE] captn MirrorAgent indisponible: {exc}")
