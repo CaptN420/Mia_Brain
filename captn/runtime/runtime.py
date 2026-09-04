@@ -6,16 +6,17 @@ import logging
 from typing import Any, Dict, List, Optional, Callable, Tuple
 from captn.runtime.base import Message, Task, Rule, Pipeline
 from captn.runtime.manager import PluginManager
-from captn.runtime.scanner import ProjectScanner, ProjectManifest
+from tools.scanner import ProjectScanner, ProjectManifest
 from captn.runtime.workers import SyntaxWorker, BugWorker
-from captn.workers.fix_generator import FixGenerator
-from captn.workers.raw2json_worker import Raw2JsonWorker
-from captn.workers.deterministic_coder import DeterministicCoder
+from captn.workers.code_generation.fix_generator import FixGenerator
+from captn.workers.data_ingestion.raw2json_worker import Raw2JsonWorker
+from captn.workers.code_generation.deterministic_coder import DeterministicCoder
 from captn.runtime.thinker import Thinker
 from captn.runtime.patch_generator import PatchGenerator
 from captn.runtime.llm_provider import OpenAIProvider, FallbackLLM
 from captn.runtime.mirror_agent import MirrorAgent
-from captn.runtime.math_validator import MathValidator
+from tools.math_validator import MathValidator
+from captn.workers.orchestration.smart_router import SmartRouter
 
 # Import Alchimie Library Manager
 import sys
@@ -217,7 +218,18 @@ class Captn:
         self.thinker = Thinker(self.alchimie_manager)
         self.patch_generator = PatchGenerator()
         self.math_validator = MathValidator()
-        
+
+        # SmartRouter — routage déterministe des workers par description de tâche
+        self.smart_router = SmartRouter()
+
+        # Seed the Fragment Registry with all available deterministic fragments
+        try:
+            from captn.runtime.seed_registry import seed_all as _seed_all
+            _seed_all()
+            logger.info("Fragment registry seeded with deterministic fragments")
+        except Exception as e:
+            logger.warning("Fragment registry seeding failed: %s", e)
+
         # Initialize LLM Provider and Fallback Component for Last-Resort Recovery
         self.llm_provider = OpenAIProvider(model="gpt-4o-mini", mode="responses")
         self.fallback_llm = FallbackLLM(llm_provider=self.llm_provider)
@@ -302,6 +314,20 @@ class Captn:
         # To simplify, we'll trigger Thinker when the UI signals 'analysis_complete'.
         # Or, we can add a 'coordinator' that counts responses.
 
+    def resolve_pipeline_for_task(self, description: str, top_k: int = 2) -> List[str]:
+        """Utilise SmartRouter pour générer dynamiquement les steps d'un pipeline.
+
+        Args:
+            description: Description de la tâche (ex. "generate code", "analyse project")
+            top_k: Nombre de workers à inclure
+
+        Retourne:
+            Liste ordonnée de noms de workers (steps de pipeline)
+        """
+        steps = self.smart_router.resolve_pipeline_steps(description, top_k=top_k)
+        logger.info(f"SmartRouter: '{description[:60]}' -> pipeline steps: {steps}")
+        return steps
+
     def handle_message(self, message: Message):
         logger.info(f"Captn: Received {message.type} from {message.sender}")
         
@@ -320,11 +346,19 @@ class Captn:
         pipeline_id = payload.get("pipeline_id", "default")
         
         pipeline = self.pipelines.get(pipeline_id)
-        
+
         if not pipeline:
-            logger.warning(f"Captn: No pipeline found for {pipeline_id}. Using default logic.")
-            self.dispatch_to_plugin(task_id, payload.get("action"), message)
-            return
+            # SmartRouter fallback: générer un pipeline dynamique via la description
+            description = payload.get("description") or payload.get("topic") or ""
+            if description:
+                logger.info(f"Captn: No pipeline '{pipeline_id}' found. Using SmartRouter for: '{description[:60]}'")
+                steps = self.resolve_pipeline_for_task(description, top_k=2)
+                pipeline = Pipeline(id=pipeline_id, steps=steps)
+                self.register_pipeline(pipeline)
+            else:
+                logger.warning(f"Captn: No pipeline found for {pipeline_id}. Using default logic.")
+                self.dispatch_to_plugin(task_id, payload.get("action"), message)
+                return
         
         # 1. Validate against Rules
         task = Task(**payload)

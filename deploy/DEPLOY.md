@@ -27,10 +27,10 @@ git clone <your-repo> ~/captn && cd ~/captn
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 
-# Generate access token — save it, you'll need it to log in:
-python3 -c "import secrets; print(secrets.token_urlsafe(32))" > .captn_token
-mkdir -p .captn && cp .captn_token .captn/auth_token && rm .captn_token
-cat .captn/auth_token   # <- this is your login token
+# Generate access passphrase — save it, you'll need it to log in:
+python3 -c "import secrets; print(secrets.token_urlsafe(32))" > .captn_passphrase
+mkdir -p .captn && cp .captn_passphrase .captn/auth_passphrase && rm .captn_passphrase
+cat .captn/auth_passphrase   # <- this is your login passphrase
 ```
 
 ### 3. Services (auto-start + auto-restart)
@@ -72,7 +72,7 @@ Port 8501 stays closed to the world — only Caddy talks to it.
 
 ### 5. Test
 Open `https://captn-server024.org` → you should see the **Captn – Access
-Restricted** gate → log in with the token.
+Restricted** gate → log in with the passphrase.
 
 ---
 
@@ -108,16 +108,16 @@ cloudflared tunnel create captn
 cloudflared tunnel route dns captn captn-server024.org
 cloudflared tunnel run captn
 ```
-Still keep auth ON (`set CAPTN_AUTH_TOKEN=...` before starting Streamlit).
+Still keep auth ON (`set CAPTN_AUTH_PASSPHRASE=...` before starting Streamlit).
 
 ---
 
 ## Security checklist before going live
 
-- [ ] Token generated and stored in `.captn/auth_token` (never committed!) — or in `.env` as `CAPTN_AUTH_TOKEN`
+- [ ] Passphrase generated and stored in `.captn/auth_passphrase` (never committed!) — or in `.env` as `CAPTN_AUTH_PASSPHRASE`
 - [ ] `deploy/Caddyfile` email changed to yours
 - [ ] `.gitignore` contains `.captn/`, `.env`, and `openai_config.json`
-- [ ] `python scripts/scan_secrets.py` passes (no secrets in tracked files)
+- [ ] `python tools/scan_secrets.py` passes (no secrets in tracked files)
 - [ ] Test: logged-out visitor sees ONLY the login gate
 - [ ] Optional demo hardening: don't enter a real OpenAI key on the public instance
-- [ ] If the token was ever exposed, rotate it (see SECURITY.md) and restart the dashboard
+- [ ] If the passphrase was ever exposed, rotate it (see SECURITY.md) and restart the dashboard

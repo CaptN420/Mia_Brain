@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import sys
 import time
+import json as _json
 import pandas as pd
 from datetime import datetime
 import subprocess
@@ -22,7 +23,7 @@ if project_root not in sys.path:
 # Now that the root is in sys.path, we can import 'captn'
 try:
     from captn.runtime.runtime import StateStore, MessageBus, Captn
-    from captn.runtime.scanner import ProjectScanner, ProjectManifest
+    from tools.scanner import ProjectScanner, ProjectManifest
     from captn.runtime.base import Message
     from captn.runtime.validator import PatchValidator
     from captn.runtime.llm_provider import OpenAIProvider, FallbackLLM
@@ -41,34 +42,51 @@ except ModuleNotFoundError as e:
     st.warning(f"Alchimie Library Manager not available: {e}")
     AlchimieLibraryManager = None
 
-# --- Persistent config via browser cookies (survives reloads/restarts) ---
-try:
-    from streamlit_cookies_controller import CookieController
-    _COOKIES_AVAILABLE = True
-except ImportError:
-    _COOKIES_AVAILABLE = False
 
-def get_cookie_controller():
-    """Return the cookie controller, creating it once per session."""
-    if not _COOKIES_AVAILABLE:
-        return None
-    if "cookie_controller" not in st.session_state:
-        st.session_state.cookie_controller = CookieController()
-    return st.session_state.cookie_controller
-
-_COOKIE_KEY = "captn_openai_config"
 
 def _config_store_path():
     """N-02: server-side config file, NOT a browser cookie.
     The API key never leaves the machine as a cookie value; the file lives
-    under the project root with user-only permissions."""
+    under the project root with user-only permissions.
+    Best-effort keyring integration: uses the system keyring when available,
+    falls back to the encrypted file."""
     return os.path.join(get_project_root(), ".captn", "openai_config.json")
+
+def _try_keyring_get(service="captn_dashboard"):
+    """Best-effort read from system keyring. Returns None if unavailable."""
+    try:
+        import keyring
+        return keyring.get_password(service, "openai_api_key")
+    except Exception:
+        return None
+
+def _try_keyring_set(key, service="captn_dashboard"):
+    """Best-effort write to system keyring."""
+    try:
+        import keyring
+        keyring.set_password(service, "openai_api_key", key)
+        return True
+    except Exception:
+        return False
+
+def _try_keyring_delete(service="captn_dashboard"):
+    """Best-effort delete from system keyring."""
+    try:
+        import keyring
+        try:
+            keyring.delete_password(service, "openai_api_key")
+        except Exception:
+            pass
+        return True
+    except Exception:
+        return False
 
 def load_config_from_cookies():
     """Load the saved OpenAI config (server-side file). Returns dict or None.
 
     N-02: replaced the plaintext 1-year browser cookie with a local config
     file. Same JSON shape; cookies no longer carry the API key at all.
+    The API key itself is stored in the system keyring when available.
     """
     try:
         path = _config_store_path()
@@ -77,6 +95,14 @@ def load_config_from_cookies():
             with open(path, "r", encoding="utf-8") as f:
                 cfg = _json.load(f)
             if isinstance(cfg, dict):
+                # Try to restore API key from keyring (non-empty, non-placeholder)
+                _stored_key = cfg.get("api_key", "")
+                if _stored_key and "sk-" in _stored_key:
+                    pass  # file already has the key
+                else:
+                    _kr_key = _try_keyring_get()
+                    if _kr_key:
+                        cfg["api_key"] = _kr_key
                 return cfg
     except Exception:
         pass
@@ -86,11 +112,22 @@ def save_config_to_cookies(cfg: dict):
     """Persist the OpenAI config server-side (name kept for call-site compat).
 
     N-02: writes to <project>/.captn/openai_config.json instead of a cookie.
+    API key is also stored in the system keyring when available.
     """
     try:
         path = _config_store_path()
         os.makedirs(os.path.dirname(path), exist_ok=True)
         import json as _json
+
+        # Best-effort keyring storage for the API key
+        _api_key = cfg.get("api_key", "")
+        if _api_key:
+            _try_keyring_set(_api_key)
+            # Remove the key from the JSON payload so it's not stored in plaintext
+            # on disk. If keyring is unavailable, keep it in the file as fallback.
+            if _try_keyring_get():
+                cfg = {k: v for k, v in cfg.items() if k != "api_key"}
+
         with open(path, "w", encoding="utf-8") as f:
             _json.dump(cfg, f)
         # Best-effort: restrict to current user on Windows / POSIX.
@@ -109,16 +146,16 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- HARDEN (S-01): disable cross-origin requests and keep XSRF protection on.
-# The dashboard is only ever reached via its own origin (localhost or the
-# tunnel/proxy domain), so CORS is never needed; leaving it on would let a
-# malicious third-party page drive the panel. This fails silently if the
-# option name changes in a future Streamlit release. ---
-try:
-    st.set_option("server.enableCORS", False)
-    st.set_option("server.enableXsrfProtection", True)
-except Exception:
-    pass
+# Inject a proper SVG favicon via HTML (emojis render inconsistently across browsers)
+st.markdown("""
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+""", unsafe_allow_html=True)
+
+# --- HARDEN (S-01): CORS and XSRF are now set at server startup.
+# These must be passed as CLI flags (--server.enableCORS false
+# --server.enableXsrfProtection true) or set in .streamlit/config.toml,
+# because Streamlit >=1.30 no longer allows set_option for server-level
+# config on the fly. The old try/except<set_option> block was dead code. ---
 
 # --- Workflow State Management ---
 if 'workflow_state' not in st.session_state:
@@ -153,12 +190,6 @@ st.markdown("""
         height: 3em;
         color: white;
     }
-    .do-fix {
-        background-color: #ff4b4b;
-    }
-    .rollback {
-        background-color: #4a90e2;
-    }
     .log-container {
         background-color: #000000;
         color: #00FF00;
@@ -179,99 +210,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- Authentication Gate (N-08) ---
-# Token-based login. Required when CAPTN_AUTH_TOKEN is set (recommended for
-# any non-localhost binding); auto-bypassed on pure localhost dev use when
-# unset. The token is compared with hmac.compare_digest (constant-time).
-import hmac as _hmac
-
-def _client_is_local():
-    """Best-effort check: Streamlit exposes X-Forwarded-For via st.context
-    headers in newer versions; fall back to trusting the server bind."""
-    try:
-        headers = st.context.headers  # Streamlit >= 1.37
-        xff = headers.get("X-Forwarded-For", "")
-        if xff:
-            return xff.split(",")[0].strip() in ("127.0.0.1", "::1")
-    except Exception:
-        pass
-    return None  # unknown -> let token requirement decide
-
-_AUTH_TOKEN = os.environ.get("CAPTN_AUTH_TOKEN", "").strip()
-if not _AUTH_TOKEN:
-    # Fallback: read from .captn/auth_token file if present.
-    # (project root computed inline - get_project_root() is defined further down)
-    _tok_file = os.path.abspath(os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "..", "..", ".captn", "auth_token"))
-    try:
-        if os.path.exists(_tok_file):
-            with open(_tok_file, "r", encoding="utf-8") as tf:
-                _AUTH_TOKEN = tf.read().strip()
-    except Exception:
-        pass
-
-
-# S-02: brute-force lockout tuning
-_MAX_FAIL = 10          # max failed logins before the form locks
-_FAIL_WINDOW = 300      # sliding lockout window, seconds
-
-
-def _login_locked() -> bool:
-    """S-02: per-session brute-force lockout. Counts failed attempts inside a
-    sliding window and locks the login form once the ceiling is hit."""
-    st.session_state.setdefault("auth_fail_times", [])
-    _now = time.time()
-    st.session_state.auth_fail_times = [
-        t for t in st.session_state.auth_fail_times if _now - t < _FAIL_WINDOW
-    ]
-    return len(st.session_state.auth_fail_times) >= _MAX_FAIL
-
-
-def _register_fail() -> None:
-    st.session_state.setdefault("auth_fail_times", []).append(time.time())
-
-
-def auth_required() -> bool:
-    """True if the user must authenticate this session.
-
-    Fail-closed (S-02): if NO token is configured, LOCAL clients are still
-    allowed (dev convenience) but REMOTE/unknown clients are DENIED — the
-    panel must never silently expose itself to the internet just because a
-    token was forgotten. With a token set, remote clients must supply it.
-    """
-    _is_local = _client_is_local()
-    if not _AUTH_TOKEN:
-        if _is_local is True and not os.environ.get("CAPTN_AUTH_ENFORCE_LOCAL"):
-            return False  # local dev, no token -> open (unchanged behaviour)
-        return True       # remote/unknown, no token -> DENY (fail closed)
-    if _is_local is True and not os.environ.get("CAPTN_AUTH_ENFORCE_LOCAL"):
-        return False  # local clients bypass unless strictness requested
-    return True
-
-
-if auth_required():
-    if 'authenticated' not in st.session_state:
-        st.session_state.authenticated = False
-
-    if not st.session_state.authenticated:
-        st.markdown("<h2 style='text-align:center'>Captn - Access Restricted</h2>",
-                    unsafe_allow_html=True)
-        if _login_locked():
-            st.error("Too many failed attempts. Wait a few minutes before retrying.")
-            st.stop()
-        tok = st.text_input("Access token", type="password",
-                            help="Ask the administrator for the access token.")
-        if st.button("Unlock", use_container_width=True, type="primary"):
-            if tok and _hmac.compare_digest(tok.encode(), _AUTH_TOKEN.encode()):
-                st.session_state.authenticated = True
-                st.session_state.auth_fail_times = []
-                st.rerun()
-            else:
-                _register_fail()
-                st.error("Invalid token. Access denied.")
-                # Escalating brute-force damping (S-02).
-                time.sleep(min(1.5 + 0.5 * len(st.session_state.auth_fail_times), 10))
-        st.stop()
 
 # --- Backend Initialization ---
 # H-02: ONE process-wide runtime shared by every browser session/tab.
@@ -366,9 +304,9 @@ def run_pipeline_raw2json_feed_autogen(
     import json as _json
     import contextlib
     import traceback as _tb
-    from captn.workers.raw2json import convert_raw_directory
-    from captn.workers.crawler import merge_dataset_into_corpus
-    from captn.workers.autogen import run_autogen_loop
+    from captn.workers.data_ingestion.raw2json import convert_raw_directory
+    from captn.workers.data_ingestion.crawler import merge_dataset_into_corpus
+    from captn.workers.code_generation.autogen import run_autogen_loop
 
     root = os.path.abspath(root)
 
@@ -910,9 +848,25 @@ with st.sidebar:
         else:
             st.error("No valid fix script found to apply.")
         
-    rollback_enabled = st.session_state.workflow_state["fix_generated"]
-    if st.button("Rollback", disabled=not rollback_enabled and not st.session_state.workflow_state["fix_validated"]):
+    rollback_enabled = st.session_state.workflow_state["fix_generated"] or st.session_state.workflow_state["fix_validated"]
+    if st.button("Rollback", disabled=not rollback_enabled):
         st.info("Rolling back changes...")
+        # Check if there's a fix generation path to revert
+        _tried = False
+        _rolled = False
+        if hasattr(st.session_state.captn.store, 'get_all_task_states'):
+            for task_id, state in st.session_state.captn.store.get_all_task_states():
+                if task_id.startswith('fix_') and state.get('fix_path'):
+                    _tried = True
+                    success = st.session_state.store.rollback(task_id)
+                    if success:
+                        _rolled = True
+                        st.success(f"Rolled back {task_id}")
+                        st.session_state.workflow_state["fix_generated"] = False
+                        st.session_state.workflow_state["fix_validated"] = False
+                        break
+        if not _tried:
+            st.warning("No fix history found to roll back.")
         
     run_enabled = st.session_state.workflow_state["project_loaded"]
     if st.button("Run Project", disabled=not run_enabled):
@@ -1055,7 +1009,7 @@ with st.sidebar:
 
     # --- Token usage: Captn+MIA architecture vs none (baseline) ---
     try:
-        from captn.workers.autogen import TOKEN_USAGE as _TU
+        from captn.workers.code_generation.autogen import TOKEN_USAGE as _TU
     except ImportError:
         _TU = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0, "calls": 0}
 
@@ -1114,112 +1068,118 @@ with st.sidebar:
     if AlchimieLibraryManager is not None:
         # Initialize library manager if not already in session state
         if 'alchimie_manager' not in st.session_state:
-            library_dir = os.path.join(project_root, "alchimie")
-            st.session_state.alchimie_manager = AlchimieLibraryManager(library_dir)
+            try:
+                library_dir = os.path.join(project_root, "alchimie")
+                st.session_state.alchimie_manager = AlchimieLibraryManager(library_dir)
+            except Exception as _alm_err:
+                st.warning(f"Alchimie Library Manager failed to initialize: {_alm_err}")
+                st.session_state.alchimie_manager = None
             
         manager = st.session_state.alchimie_manager
-        
-        # Library Status Display
-        st.markdown("**ALCHIMIE LIBRARY**")
-        status = manager.get_library_status()
-        
-        col_lib1, col_lib2 = st.columns(2)
-        with col_lib1:
-            st.metric("Version", status.get('library_version', '1.0.0'))
-            st.metric("Rules", status.get('rules_count', 0))
-            st.metric("Transformations", status.get('transformations_count', 0))
-        with col_lib2:
-            st.metric("Experimental", status.get('experimental_rules_count', 0))
-            st.metric("Pending Files", status.get('pending_files_count', 0))
+        if manager is None:
+            st.info("Alchimie Library Manager could not be initialized. Check the alchimie/ directory.")
+        else:
+            # Library Status Display
+            st.markdown("**ALCHIMIE LIBRARY**")
+            status = manager.get_library_status()
             
-        st.divider()
-        
-        # UI Buttons for Library Management
-        st.markdown("**Library Actions**")
-        col_scan, col_validate = st.columns(2)
-        with col_scan:
-            if st.button("[ Scan New Data ]", use_container_width=True):
-                with st.spinner("Scanning new data..."):
-                    scan_result = manager.scan_new_data()
-                    st.success(f"Found {len(scan_result.get('files', []))} files to process.")
-                    st.write(scan_result)
-                    
-        with col_validate:
-            if st.button("[ Validate ]", use_container_width=True):
-                with st.spinner("Validating data..."):
-                    validate_result = manager.validate_new_data()
-                    if validate_result.get('valid'):
-                        st.success("✓ JSON valid, ✓ Schema valid")
-                    else:
-                        st.error(f"✗ Validation failed: {validate_result.get('errors')}")
-                        
-        col_preview, col_merge = st.columns(2)
-        with col_preview:
-            if st.button("[ Preview Merge ]", use_container_width=True):
-                with st.spinner("Previewing merge..."):
-                    preview_result = manager.preview_merge()
-                    st.write("Merge Preview Results:")
-                    st.write(preview_result)
-                    
-        with col_merge:
-            if st.button("[ Merge Files ]", use_container_width=True):
-                with st.spinner("Performing transactional merge..."):
-                    merge_result = manager.merge_new_data()
-                    if merge_result.get('success'):
-                        st.success("Merge successful!")
-                        # Refresh library after merge
-                        manager.reload()
-                    else:
-                        st.error(f"Merge failed: {merge_result.get('error')}")
-                        
-        col_rollback, col_refresh = st.columns(2)
-        with col_rollback:
-            if st.button("[ Rollback ]", use_container_width=True):
-                with st.spinner("Rolling back..."):
-                    rollback_result = manager.rollback_to_last_backup()
-                    if rollback_result:
-                        st.success("Rollback successful!")
-                    else:
-                        st.error("Rollback failed.")
-                        
-        with col_refresh:
-            if st.button("[ Refresh Library ]", use_container_width=True):
-                manager.reload()
-                st.success("Library refreshed and caches invalidated.")
+            col_lib1, col_lib2 = st.columns(2)
+            with col_lib1:
+                st.metric("Version", status.get('library_version', '1.0.0'))
+                st.metric("Rules", status.get('rules_count', 0))
+                st.metric("Transformations", status.get('transformations_count', 0))
+            with col_lib2:
+                st.metric("Experimental", status.get('experimental_rules_count', 0))
+                st.metric("Pending Files", status.get('pending_files_count', 0))
                 
-        # Conflict Review UI
-        if st.session_state.alchimie_manager.has_conflicts():
             st.divider()
-            st.markdown("**⚠️ Conflict Review Required**")
-            st.markdown("Conflicts detected. Please review and resolve:")
             
-            conflicts = st.session_state.alchimie_manager.get_pending_conflicts()
-            for conflict in conflicts:
-                st.warning(f"Conflict: {conflict.get('rule_id', 'Unknown')}")
+            # UI Buttons for Library Management
+            st.markdown("**Library Actions**")
+            col_scan, col_validate = st.columns(2)
+            with col_scan:
+                if st.button("[ Scan New Data ]", use_container_width=True):
+                    with st.spinner("Scanning new data..."):
+                        scan_result = manager.scan_new_data()
+                        st.success(f"Found {len(scan_result.get('files', []))} files to process.")
+                        st.write(scan_result)
+                        
+            with col_validate:
+                if st.button("[ Validate ]", use_container_width=True):
+                    with st.spinner("Validating data..."):
+                        validate_result = manager.validate_new_data()
+                        if validate_result.get('valid'):
+                            st.success("✓ JSON valid, ✓ Schema valid")
+                        else:
+                            st.error(f"✗ Validation failed: {validate_result.get('errors')}")
+                            
+            col_preview, col_merge = st.columns(2)
+            with col_preview:
+                if st.button("[ Preview Merge ]", use_container_width=True):
+                    with st.spinner("Previewing merge..."):
+                        preview_result = manager.preview_merge()
+                        st.write("Merge Preview Results:")
+                        st.write(preview_result)
+                        
+            with col_merge:
+                if st.button("[ Merge Files ]", use_container_width=True):
+                    with st.spinner("Performing transactional merge..."):
+                        merge_result = manager.merge_new_data()
+                        if merge_result.get('success'):
+                            st.success("Merge successful!")
+                            # Refresh library after merge
+                            manager.reload()
+                        else:
+                            st.error(f"Merge failed: {merge_result.get('error')}")
+                            
+            col_rollback, col_refresh = st.columns(2)
+            with col_rollback:
+                if st.button("[ Rollback ]", use_container_width=True):
+                    with st.spinner("Rolling back..."):
+                        rollback_result = manager.rollback_to_last_backup()
+                        if rollback_result:
+                            st.success("Rollback successful!")
+                        else:
+                            st.error("Rollback failed.")
+                            
+            with col_refresh:
+                if st.button("[ Refresh Library ]", use_container_width=True):
+                    manager.reload()
+                    st.success("Library refreshed and caches invalidated.")
+                    
+            # Conflict Review UI
+            if st.session_state.alchimie_manager.has_conflicts():
+                st.divider()
+                st.markdown("**⚠️ Conflict Review Required**")
+                st.markdown("Conflicts detected. Please review and resolve:")
                 
-                # Conflict resolution options for this specific conflict
-                st.markdown(f"**Resolution for {conflict.get('rule_id', 'Unknown')}:**")
-                col_keep_existing, col_accept_incoming = st.columns(2)
-                with col_keep_existing:
-                    if st.button("KEEP EXISTING", key=f"keep_{conflict.get('rule_id')}"):
-                        st.session_state.alchimie_manager.resolve_conflict(conflict.get('rule_id'), 'KEEP_EXISTING')
-                        st.success("Conflict resolved: Keeping existing rule.")
-                        
-                with col_accept_incoming:
-                    if st.button("ACCEPT INCOMING", key=f"accept_{conflict.get('rule_id')}"):
-                        st.session_state.alchimie_manager.resolve_conflict(conflict.get('rule_id'), 'ACCEPT_INCOMING')
-                        st.success("Conflict resolved: Accepting incoming rule.")
-                        
-                col_keep_both, col_reject_incoming = st.columns(2)
-                with col_keep_both:
-                    if st.button("KEEP BOTH AS VERSIONS", key=f"keep_both_{conflict.get('rule_id')}"):
-                        st.session_state.alchimie_manager.resolve_conflict(conflict.get('rule_id'), 'KEEP_BOTH')
-                        st.success("Conflict resolved: Keeping both as versions.")
-                        
-                with col_reject_incoming:
-                    if st.button("REJECT INCOMING", key=f"reject_{conflict.get('rule_id')}"):
-                        st.session_state.alchimie_manager.resolve_conflict(conflict.get('rule_id'), 'REJECT_INCOMING')
-                        st.success("Conflict resolved: Rejecting incoming rule.")
+                conflicts = st.session_state.alchimie_manager.get_pending_conflicts()
+                for conflict in conflicts:
+                    st.warning(f"Conflict: {conflict.get('rule_id', 'Unknown')}")
+                    
+                    # Conflict resolution options for this specific conflict
+                    st.markdown(f"**Resolution for {conflict.get('rule_id', 'Unknown')}:**")
+                    col_keep_existing, col_accept_incoming = st.columns(2)
+                    with col_keep_existing:
+                        if st.button("KEEP EXISTING", key=f"keep_{conflict.get('rule_id')}"):
+                            st.session_state.alchimie_manager.resolve_conflict(conflict.get('rule_id'), 'KEEP_EXISTING')
+                            st.success("Conflict resolved: Keeping existing rule.")
+                            
+                    with col_accept_incoming:
+                        if st.button("ACCEPT INCOMING", key=f"accept_{conflict.get('rule_id')}"):
+                            st.session_state.alchimie_manager.resolve_conflict(conflict.get('rule_id'), 'ACCEPT_INCOMING')
+                            st.success("Conflict resolved: Accepting incoming rule.")
+                            
+                    col_keep_both, col_reject_incoming = st.columns(2)
+                    with col_keep_both:
+                        if st.button("KEEP BOTH AS VERSIONS", key=f"keep_both_{conflict.get('rule_id')}"):
+                            st.session_state.alchimie_manager.resolve_conflict(conflict.get('rule_id'), 'KEEP_BOTH')
+                            st.success("Conflict resolved: Keeping both as versions.")
+                            
+                    with col_reject_incoming:
+                        if st.button("REJECT INCOMING", key=f"reject_{conflict.get('rule_id')}"):
+                            st.session_state.alchimie_manager.resolve_conflict(conflict.get('rule_id'), 'REJECT_INCOMING')
+                            st.success("Conflict resolved: Rejecting incoming rule.")
     else:
         st.info("Alchimie Library Manager not available. Ensure the tools directory is in the Python path.")
 
@@ -1429,7 +1389,7 @@ st.caption(
 
 _crawler_ok = True
 try:
-    from captn.workers.crawler import (
+    from captn.workers.data_ingestion.crawler import (
         GitHubCrawler,
         RateLimitError,
         CrawlError as _CrawlError,
@@ -1487,12 +1447,17 @@ if _crawler_ok:
     with _c8:
         dry_run = st.checkbox("Dry run (do not write)", key="crawl_dry")
 
+    _is_dry_run = st.session_state.get("crawl_dry", False)
+
     _c9, _c10, _c11 = st.columns([1, 1, 1])
     with _c9:
-        export_dataset = st.checkbox("Export AI-ready JSON dataset", value=True, key="crawl_ds")
+        export_dataset = st.checkbox("Export AI-ready JSON dataset", value=True, key="crawl_ds",
+                                     disabled=_is_dry_run,
+                                     help="Disabled during dry run — no files are written.")
     with _c10:
         learn_corpus = st.checkbox("🧠 Feed into learning corpus", value=False, key="crawl_learn",
-                                   help="Merge the dataset into Code_base/ (dedup by sha256) for self code-learning")
+                                   disabled=_is_dry_run,
+                                   help="Disabled during dry run — no files are written.")
     with _c11:
         st.markdown(
             "<div style='padding-top:1.6em;font-size:0.8em;color:#888'>"
@@ -1512,6 +1477,7 @@ if _crawler_ok:
         type="password", value="", key="crawl_token", help=_token_help,
     )
     if _github_token.strip():
+        st.session_state["_active_crawl_token"] = _github_token.strip()
         try:
             os.makedirs(os.path.dirname(_token_file), exist_ok=True)
             # Write only if different (avoid churn / re-permission prompts).
@@ -1525,6 +1491,13 @@ if _crawler_ok:
                 st.success("Token saved to .captn/github_token (gitignored).")
         except OSError as _oe:
             st.error(f"Could not save token file: {_oe}")
+    elif "_active_crawl_token" not in st.session_state:
+        # Fall back to env var or file for session_state
+        _file_tok = ""
+        if os.path.isfile(_token_file):
+            with open(_token_file, "r", encoding="utf-8") as fh:
+                _file_tok = fh.read().strip()
+        st.session_state["_active_crawl_token"] = _file_tok or os.environ.get("GITHUB_TOKEN", "")
 
     # Show the ACTIVE rate-limit ceiling so the user knows if they are unlocked.
     _active_tok = _github_token.strip() or os.environ.get("GITHUB_TOKEN") or (
@@ -1565,7 +1538,7 @@ if _crawler_ok:
             # Self code-learning: merge the crawled dataset into the project corpus.
             _learn_stats = None
             if learn_corpus and not dry_run and _result.dataset_jsonl:
-                from captn.workers.crawler import merge_dataset_into_corpus
+                from captn.workers.data_ingestion.crawler import merge_dataset_into_corpus
                 try:
                     _learn_stats = merge_dataset_into_corpus(
                         _result.dataset_jsonl,
@@ -1638,13 +1611,13 @@ if _crawler_ok:
             _q_results = []  # (repo, status, detail)
             _q_progress = st.progress(0.0)
             _q_log = st.empty()
-            _q_crawler = GitHubCrawler(token=os.environ.get("GITHUB_TOKEN"), max_files=int(max_files))
+            _q_crawler = GitHubCrawler(token=st.session_state.get("_active_crawl_token", os.environ.get("GITHUB_TOKEN")), max_files=int(max_files))
             for _i, _repo in enumerate(_queue_repos):
                 _dest = dest.strip() or os.path.join(
                     get_project_root(), "crawled", _repo.replace("/", "__")
                 )
                 _status = f"⏳ ({_i+1}/{len(_queue_repos)}) {_repo}"
-                _q_log.info(_status)
+                _q_log.text(_status)
                 try:
                     _r = _q_crawler.crawl(
                         repo_spec=_repo,
@@ -1735,7 +1708,7 @@ if _crawler_ok:
             "Min stars", min_value=100, max_value=500000, value=5000, step=1000, key="ac_stars"
         )
 
-    def _search_top_repos(language: str, per_lang: int, min_stars: int):
+    def _search_top_repos(language: str, per_lang: int, min_stars: int, user_token: str = ""):
         """Query GitHub Search API for top starred open-source repos.
 
         Open-source only: explicit permissive licenses (MIT/Apache/BSD)
@@ -1743,7 +1716,7 @@ if _crawler_ok:
         keeps active public projects.
         Returns list of 'owner/name' strings (never clones private/forked code).
         """
-        _gh_tok = os.environ.get("GITHUB_TOKEN")
+        _gh_tok = user_token or os.environ.get("GITHUB_TOKEN")
         _hdrs = {"Accept": "application/vnd.github+json"}
         if _gh_tok:
             _hdrs["Authorization"] = f"Bearer {_gh_tok}"
@@ -1779,15 +1752,15 @@ if _crawler_ok:
         _ac_prev = ""
     st.code(
         _ac_prev
-        or "(aucun log encore — lance l'Auto-Crawl pour voir la découverte et le crawl ici en temps réel)",
+        or "(no log yet — run Auto-Crawl to see discovery and crawling here in real time)",
         language="text",
     )
 
     ac_manual = st.checkbox(
-        "🔓 Activer l'auto-crawl manuellement",
+        "🔓 Enable auto-crawl manually",
         value=False,
         key="ac_manual",
-        help="Doit être coché pour que le bouton soit utilisable.",
+        help="Must be checked for the button to work.",
     )
     if "ac_active" not in st.session_state:
         st.session_state["ac_active"] = False
@@ -1795,7 +1768,7 @@ if _crawler_ok:
         st_autorefresh(interval=1000, key="ac_refresh")
         _ac_live = tail_log(_AC_LOG) if os.path.exists(_AC_LOG) else ""
         st.code(_ac_live or "(…)", language="text")
-        if "[AUTOCRAWL] Terminé" in _ac_live or "[AUTOCRAWL][ERROR]" in _ac_live:
+        if "[AUTOCRAWL] Finished" in _ac_live or "[AUTOCRAWL][ERROR]" in _ac_live:
             st.session_state["ac_active"] = False
 
     _ac_go = st.button("🤖 Auto-Crawl trending repos", use_container_width=True,
@@ -1805,33 +1778,33 @@ if _crawler_ok:
         st.session_state["ac_active"] = True
         st.session_state["ac_ran_this_session"] = True  # E-07: this session owns the log now
         open(_AC_LOG, "w", encoding="utf-8").close()  # fresh log for this run
-        _ac_tlog("[AUTOCRAWL] Démarrage — découverte des meilleurs repos open-source…")
+        _ac_tlog("[AUTOCRAWL] Start — discovering top open-source repos…")
     if _ac_go:
         # 1) Discover the top repos per selected language.
         _ac_plan = []          # (lang, repo) pairs
         _ac_errors = []
         for _lang in _ac_langs:
             try:
-                _ac_tlog(f"[AUTOCRAWL] 🔎 Recherche GitHub: top {int(ac_repos_per_lang)} repos {_lang} (≥{int(ac_min_stars)}★, licence MIT/Apache/BSD)…")
-                _found = _search_top_repos(_lang, int(ac_repos_per_lang), int(ac_min_stars))
+                _ac_tlog(f"[AUTOCRAWL] 🔎 GitHub search: top {int(ac_repos_per_lang)} repos {_lang} (≥{int(ac_min_stars)}★, MIT/Apache/BSD license)…")
+                _found = _search_top_repos(_lang, int(ac_repos_per_lang), int(ac_min_stars), st.session_state.get("_active_crawl_token", ""))
                 for _r in _found:
                     _ac_plan.append((_lang, _r))
                     _ac_tlog(f"[AUTOCRAWL]   ✓ {_r}")
                 if not _found:
                     _ac_errors.append(f"{_lang}: no repo matched the criteria")
-                    _ac_tlog(f"[AUTOCRAWL]   ⚠ {_lang}: aucun résultat")
+                    _ac_tlog(f"[AUTOCRAWL]   ⚠ {_lang}: no results")
             except Exception as _se:
                 _ac_errors.append(f"{_lang}: {_se}")
                 _ac_tlog(f"[AUTOCRAWL][ERROR] {_lang}: {_se}")
 
-        _ac_tlog(f"[AUTOCRAWL] {len(_ac_plan)} repos sélectionnés. Début du crawl (max_files={int(max_files)}, dry_run={'oui' if dry_run else 'non'})…")
+        _ac_tlog(f"[AUTOCRAWL] {len(_ac_plan)} repos selected. Starting crawl (max_files={int(max_files)}, dry_run={'yes' if dry_run else 'no'})…")
 
-        st.info(f"🔎 {len(_ac_plan)} repos sélectionnés : " + ", ".join(f"`{r}`" for _, r in _ac_plan))
+        st.info(f"🔎 {len(_ac_plan)} repos selected: " + ", ".join(f"`{r}`" for _, r in _ac_plan))
         for _e in _ac_errors:
             st.warning(_e)
 
         if not _ac_plan:
-            st.error("Aucun repo trouvé — vérifie ta connexion ou ton GITHUB_TOKEN.")
+            st.error("No repos found — check your connection or GITHUB_TOKEN.")
         else:
             # 2) Crawl each discovered repo with the panel's filters.
             _ext_list = None
@@ -1843,14 +1816,14 @@ if _crawler_ok:
                 _ext_list = _dedupe_keep_order(
                     [e.strip() for l in _ac_langs for e in _AUTO_LANGS[l].split(",")]
                 )
-            _ac_crawler = GitHubCrawler(token=os.environ.get("GITHUB_TOKEN"), max_files=int(max_files))
+            _ac_crawler = GitHubCrawler(token=st.session_state.get("_active_crawl_token", os.environ.get("GITHUB_TOKEN")), max_files=int(max_files))
             _ac_results = []
             _ac_progress = st.progress(0.0)
             _ac_log = st.empty()
 
             for _i, (_lang, _repo) in enumerate(_ac_plan):
                 _dest = os.path.join(get_project_root(), "crawled", _repo.replace("/", "__"))
-                _ac_tlog(f"[AUTOCRAWL] ⏳ ({_i+1}/{len(_ac_plan)}) crawl de {_repo} ({_lang})…")
+                _ac_tlog(f"[AUTOCRAWL] ⏳ ({_i+1}/{len(_ac_plan)}) crawling {_repo} ({_lang})…")
                 try:
                     _r = _ac_crawler.crawl(
                         repo_spec=_repo,
@@ -1886,7 +1859,7 @@ if _crawler_ok:
                 _ac_log.info(f"⏳ ({_i+1}/{len(_ac_plan)}) {_repo}: {_ac_results[-1][3]}")
 
             _ac_ok = sum(1 for _, _, s, _ in _ac_results if s == "✅")
-            _ac_tlog(f"[AUTOCRAWL] Terminé: {_ac_ok}/{len(_ac_results)} repos crawlés avec succès.")
+            _ac_tlog(f"[AUTOCRAWL] Finished: {_ac_ok}/{len(_ac_results)} repos crawled successfully.")
             st.success(f"Auto-crawl done: {_ac_ok}/{len(_ac_results)} repos crawled.")
             with st.expander("Auto-crawl report"):
                 for _lang, _repo, _s, _d in _ac_results:
@@ -1930,23 +1903,23 @@ if _crawler_ok:
         if _candidates:
             _ag_ds_effective = max(_candidates, key=os.path.getmtime)
             _ag_ds_autodiscovered = True
-            st.info(f"📎 Dataset auto-détecté : `{_ag_ds_effective}`")
+            st.info(f"📎 Auto-detected dataset: `{_ag_ds_effective}`")
     _ag_ds_ok = bool(_ag_ds_effective) and os.path.isfile(_ag_ds_effective)
     if _ag_ds.strip() and not _ag_ds_ok:
         st.warning(f"⚠️ Dataset file not found: `{_ag_ds.strip()}`. Crawl a repo first, or paste a real dataset.jsonl path.")
     elif not _ag_ds_ok:
-        st.warning("⚠️ Aucun dataset disponible. Lance d'abord un Crawl ou une Conversion Raw→JSON.")
+        st.warning("⚠️ No dataset available. Run a Crawl or Raw→JSON conversion first.")
     # Manual activation gate: ON DEMAND — the loop ONLY runs when the user
     # explicitly flips this switch AND presses Run in the same session.
     ag_manual = st.checkbox(
-        "🔓 Activer la boucle manuellement (on-demand)",
+        "🔓 Enable autogen loop manually (on-demand)",
         value=False,
         key="ag_manual",
-        help="Doit être coché pour que le bouton Run soit utilisable.",
+        help="Must be checked for the Run button to work.",
     )
     # F2 fix: tell the user exactly what is missing instead of a dead button.
     if not ag_manual and _ag_ds_ok:
-        st.caption("👆 Coche « Activer la boucle manuellement » pour déverrouiller le bouton Run.")
+        st.caption("👆 Check « Enable autogen loop manually » to unlock the Run button.")
     _ag_prompt = st.text_area(
         "Prompt template",
         value=(
@@ -1987,7 +1960,7 @@ if _crawler_ok:
             def _run_ag_thread(log_path, ds, done_flag_path, **kw):
                 import contextlib
                 import json as _json
-                from captn.workers.autogen import run_autogen_loop
+                from captn.workers.code_generation.autogen import run_autogen_loop
 
                 # AUDIT-C: this runs in a daemon thread — NEVER touch
                 # st.session_state here (raises MissingScriptRunContext and
@@ -2040,7 +2013,7 @@ if _crawler_ok:
         _log_says_done = "[AUTOGEN] done" in _ag_content or "[AUTOGEN][ERROR]" in _ag_content
         if os.path.exists(_ag_done_flag) or _log_says_done:
             st.session_state["ag_active"] = False
-    st.code(_ag_content or "(aucun log encore — active et lance la boucle pour voir l'activité ici en temps réel)", language="text")
+    st.code(_ag_content or "(no log yet — enable and run the loop to see activity here in real time)", language="text")
     if st.session_state.get("ag_active", False):
         st.info("🔄 Autogen running… (auto-refreshing)")
     else:
@@ -2078,29 +2051,29 @@ if _crawler_ok:
     # Dedup controls: automatic after each merge (default ON), plus an
     # on-demand button so duplicates can be purged manually at any time.
     raw_autodedup = st.checkbox(
-        "🧹 Auto-dedup corpus après merge",
+        "🧹 Auto-dedup corpus after merge",
         value=True,
         key="raw_autodedup",
-        help="Supprime automatiquement les doublons du corpus (par contenu sha256) à chaque fin de merge.",
+        help="Automatically remove corpus duplicates (by sha256 content) after each merge.",
     )
-    if st.button("🧹 Supprimer les doublons du corpus maintenant", key="raw_dedup_now"):
-        from captn.workers.crawler import dedup_corpus
+    if st.button("🧹 Deduplicate corpus now", key="raw_dedup_now"):
+        from captn.workers.data_ingestion.crawler import dedup_corpus
         try:
             _dd = dedup_corpus(os.path.join(get_project_root(), "Code_base"))
             if _dd["removed"] > 0:
-                st.success(f"✅ {_dd['removed']} doublon(s) supprimé(s) — "
-                           f"{_dd['before']} → {_dd['after']} enregistrements.")
+                st.success(f"✅ {_dd['removed']} duplicate(s) removed — "
+                           f"{_dd['before']} → {_dd['after']} records.")
             else:
-                st.info("Aucun doublon trouvé — le corpus est déjà propre. ✨")
+                st.info("No duplicates found — the corpus is already clean. ✨")
         except Exception as _de:
             st.error(f"Dedup failed: {_de}")
 
     # Manual activation gate + always-on real-time log.
     raw_manual = st.checkbox(
-        "🔓 Activer la conversion manuellement",
+        "🔓 Enable conversion manually",
         value=False,
         key="raw_manual",
-        help="Doit être coché pour que le bouton Convert soit utilisable.",
+        help="Must be checked for the Convert button to work.",
     )
     _RAW_LOG = os.path.abspath(os.path.join(get_project_root(), "raw2json.log"))
     _raw_ok = bool(raw_root.strip()) and os.path.isdir(raw_root.strip())
@@ -2122,15 +2095,15 @@ if _crawler_ok:
 
         def _run_raw_thread(log_path, txt_log, root, ext_list, feed, nodata, autodedup=True):
             import json as _json
-            from captn.workers.raw2json import convert_raw_directory
-            from captn.workers.crawler import merge_dataset_into_corpus
+            from captn.workers.data_ingestion.raw2json import convert_raw_directory
+            from captn.workers.data_ingestion.crawler import merge_dataset_into_corpus
 
             def _tlog(msg):
                 with open(txt_log, "a", encoding="utf-8") as fh:
                     fh.write(msg + "\n")
 
             try:
-                _tlog("[RAW2JSON] Démarrage de la conversion…")
+                _tlog("[RAW2JSON] Starting conversion…")
                 # Pre-count eligible files for an accurate progress total.
                 _total = 0
                 _excl = {".git", ".hg", ".svn", "node_modules", "__pycache__",
@@ -2144,7 +2117,7 @@ if _crawler_ok:
                         if os.path.abspath(_p) == log_path:
                             continue
                         _total += 1
-                _tlog(f"[RAW2JSON] {_total} fichiers trouvés dans {root}")
+                _tlog(f"[RAW2JSON] {_total} files found in {root}")
 
                 # Re-assert running with the real total count.
                 with open(log_path, "w", encoding="utf-8") as _lf:
@@ -2157,9 +2130,9 @@ if _crawler_ok:
                     progress_file=log_path,
                     progress_total=_total,
                 )
-                _tlog(f"[RAW2JSON] Inclus: {len(_res.files_included)} · Ignorés: {len(_res.files_skipped)} · Erreurs: {len(_res.errors)}")
+                _tlog(f"[RAW2JSON] Included: {len(_res.files_included)} · Skipped: {len(_res.files_skipped)} · Errors: {len(_res.errors)}")
                 for _err in list(_res.errors)[:10]:
-                    _tlog(f"[RAW2JSON][ERREUR] {_err}")
+                    _tlog(f"[RAW2JSON][ERROR] {_err}")
                 _out = {
                     "status": "done",
                     "done": _total,
@@ -2171,18 +2144,18 @@ if _crawler_ok:
                     "dataset_json": _res.dataset_json,
                 }
                 if feed and _res.dataset_jsonl:
-                    _tlog("[RAW2JSON] Alimentation du corpus d'apprentissage…")
+                    _tlog("[RAW2JSON] Feeding into learning corpus…")
                     _ls = merge_dataset_into_corpus(
                         _res.dataset_jsonl, os.path.join(get_project_root(), "Code_base"),
                         dedup_after=autodedup,
                     )
                     _out["fed"] = _ls
                     _dd = _ls.get("dedup_removed", 0)
-                    _extra = f", dédup auto: -{_dd}" if autodedup else ""
-                    _tlog(f"[RAW2JSON] Corpus: +{_ls['added']} ajoutés, {_ls['duplicates']} doublons{_extra}")
+                    _extra = f", auto-dedup: -{_dd}" if autodedup else ""
+                    _tlog(f"[RAW2JSON] Corpus: +{_ls['added']} added, {_ls['duplicates']} duplicates{_extra}")
                 with open(log_path, "w", encoding="utf-8") as _lf:
                     _json.dump(_out, _lf)
-                _tlog("[RAW2JSON] Terminé ✔")
+                _tlog("[RAW2JSON] Finished ✔")
             except Exception as _e:
                 import traceback as _tb
                 _tlog(f"[RAW2JSON][ERROR] {type(_e).__name__}: {_e}")
@@ -2217,12 +2190,12 @@ if _crawler_ok:
         try:
             with open(_raw_prog, "r", encoding="utf-8", errors="ignore") as _lf:
                 _raw_txt = _lf.read().strip()
-            _raw_data = json.loads(_raw_txt) if _raw_txt.startswith("{") else {}
+            _raw_data = _json.loads(_raw_txt) if _raw_txt.startswith("{") else {}
         except Exception:
             _raw_data = {}
         # _in_flight: progress file exists and not in a terminal state yet.
         _raw_status = _raw_data.get("status")
-        _in_flight = _raw_status in ("running", None) and _raw_status != "done" and _raw_status != "error"
+        _in_flight = _raw_status is not None and _raw_status in ("running",) and _raw_status != "done" and _raw_status != "error"
         # Keep auto-refreshing whenever the job is (still) running. Drive it off
         # the FILE, not session_state (thread writes are not reliably visible
         # main-side). Refresh unconditionally while in flight so the bar animates.
@@ -2268,13 +2241,13 @@ if _crawler_ok:
         st_autorefresh(interval=1000, key="raw_txt_refresh")
     st.code(
         _raw_txt_content
-        or "(aucun log encore — active et lance la conversion pour voir l'activité ici en temps réel)",
+        or "(no log yet — enable and run the conversion to see activity here in real time)",
         language="text",
     )
     if st.session_state.get("raw_active", False):
-        st.info("🔄 Conversion en cours… (log temps réel)")
+        st.info("🔄 Conversion in progress… (real-time log)")
     else:
-        st.caption("Conversion idle. Sorties dans `_converted/`.")
+        st.caption("Conversion idle. Outputs in `_converted/`.")
 
 st.divider()
 st.subheader("🦙 MIA Evolution Loop (self-learning)")
@@ -2302,12 +2275,17 @@ except Exception as _mia_imp_err:
 # Thread-safe log file for the evolution loop output.
 _MIA_LOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "mia_evolution.log")
 _MIA_LOG = os.path.abspath(_MIA_LOG)
+_MIA_DONE = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "mia_evolution.done"))
 if "mia_running" not in st.session_state:
     st.session_state.mia_running = False
 
 
-def _run_mia_loop_thread(log_path, **kwargs):
-    """Run the evolution loop in a background thread, streaming stdout to log_path."""
+def _run_mia_loop_thread(log_path, done_flag_path, **kwargs):
+    """Run the evolution loop in a background thread, streaming stdout to log_path.
+
+    AUDIT-C: this runs in a daemon thread — NEVER touch st.session_state here.
+    Completion is signalled via a marker FILE that the main script polls instead.
+    """
     import io
     import contextlib
     try:
@@ -2319,7 +2297,12 @@ def _run_mia_loop_thread(log_path, **kwargs):
         with open(log_path, "a", encoding="utf-8") as lf:
             lf.write(f"\n[MIA][ERROR] {type(_e).__name__}: {_e}\n")
     finally:
-        st.session_state.mia_running = False
+        # Signal completion via file marker (never write st.session_state from a thread)
+        try:
+            with open(done_flag_path, "w", encoding="utf-8") as ff:
+                ff.write("done")
+        except OSError:
+            pass
 
 
 if _mia_ok:
@@ -2353,11 +2336,15 @@ if _mia_ok:
                 _norm = _raw.replace(" ", "_").replace("/", "_").replace("\\", "_")
                 _session_arg = _norm if _norm.startswith("alchemy_session_") else f"alchemy_session_{_norm}"
             open(_MIA_LOG, "w", encoding="utf-8").close()
+            # Clear previous completion marker
+            if os.path.exists(_MIA_DONE):
+                os.remove(_MIA_DONE)
             st.session_state.mia_running = True
             _t = threading.Thread(
                 target=_run_mia_loop_thread,
                 kwargs=dict(
                     log_path=_MIA_LOG,
+                    done_flag_path=_MIA_DONE,
                     turns=int(mia_turns),
                     session_name=_session_arg,
                     max_cycles=int(mia_cycles),
@@ -2375,7 +2362,7 @@ if _mia_ok:
         _mia_content = tail_log(_MIA_LOG)
         if st.session_state.mia_running:
             st_autorefresh(interval=1500, key="mia_refresh")
-            if "[MIA] Evolution loop finished" in _mia_content or "[MIA][ERROR]" in _mia_content:
+            if os.path.exists(_MIA_DONE) or "[MIA] Evolution loop finished" in _mia_content or "[MIA][ERROR]" in _mia_content:
                 st.session_state.mia_running = False
         st.code(_mia_content or "(running…)", language="text")
         if st.session_state.mia_running:

@@ -9,3 +9,13 @@
 {"ts": "2026-08-27T06:06:22.244920+00:00", "type": "weird", "detail": "NEW on network: [12196] Hermes.exe  <-- UNFAMILIAR"}
 {"ts": "2026-08-27T06:06:22.244929+00:00", "type": "weird", "detail": "NEW on network: [13136] Hermes.exe  <-- UNFAMILIAR"}
 {"ts": "2026-08-27T06:06:22.244937+00:00", "type": "weird", "detail": "NEW on network: [13816] ollama app.exe  <-- UNFAMILIAR"}
+{"ts": "2026-08-27T15:16:14.325002+00:00", "type": "weird", "detail": "NEW on network: [896] wininit.exe  <-- UNFAMILIAR"}
+{"ts": "2026-08-27T15:16:14.325046+00:00", "type": "weird", "detail": "NEW on network: [3656] spoolsv.exe  <-- UNFAMILIAR"}
+{"ts": "2026-08-27T15:16:14.325063+00:00", "type": "weird", "detail": "NEW on network: [4572] ollama.exe  <-- UNFAMILIAR"}
+{"ts": "2026-08-27T15:16:14.325073+00:00", "type": "weird", "detail": "NEW on network: [9152] ollama app.exe  <-- UNFAMILIAR"}
+{"ts": "2026-08-27T15:21:18.324682+00:00", "type": "weird", "detail": "NEW on network: [1908] llama-server.exe  <-- UNFAMILIAR"}
+{"ts": "2026-08-27T15:21:18.324767+00:00", "type": "weird", "detail": "NEW on network: [4912] msedge.exe  <-- UNFAMILIAR"}
+{"ts": "2026-08-27T15:21:18.324795+00:00", "type": "weird", "detail": "NEW on network: [11748] python.exe  <-- UNFAMILIAR"}
+{"ts": "2026-08-27T15:31:23.544119+00:00", "type": "weird", "detail": "NEW on network: [328] python.exe  <-- UNFAMILIAR"}
+{"ts": "2026-08-27T15:31:23.544164+00:00", "type": "weird", "detail": "NEW on network: [2300] msedge.exe  <-- UNFAMILIAR"}
+{"ts": "2026-08-27T15:36:27.207345+00:00", "type": "weird", "detail": "NEW on network: [12804] llama-server.exe  <-- UNFAMILIAR"}

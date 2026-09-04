@@ -10,7 +10,7 @@ import tempfile
 
 from captn.runtime.base import Message
 from captn.runtime.runtime import MessageBus
-from captn.workers.raw2json_worker import Raw2JsonWorker
+from captn.workers.data_ingestion.raw2json_worker import Raw2JsonWorker
 
 
 def _make_tree():

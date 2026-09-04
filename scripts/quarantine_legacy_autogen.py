@@ -16,7 +16,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from captn.workers.autogen import behaviorally_equivalent  # noqa: E402
+from captn.workers.code_generation.autogen import behaviorally_equivalent  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 GEN_DIR = os.path.join(ROOT, "generated")

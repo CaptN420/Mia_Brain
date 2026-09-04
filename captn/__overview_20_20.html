@@ -1,0 +1,91 @@
+<html>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:transparent;color:var(--foreground,#e4e4e7);font-family:var(--font,ui-monospace,'Cascadia Code','Fira Code',monospace);font-size:13px;line-height:1.5;padding:12px 0}
+.container{max-width:900px}
+h1{font-size:18px;font-weight:700;margin-bottom:4px;color:var(--accent,#818cf8)}
+h2{font-size:14px;font-weight:600;margin:16px 0 8px;color:var(--accent,#818cf8)}
+.sub{color:var(--muted-foreground,#a1a1aa);font-size:12px;margin-bottom:16px}
+.dir{color:var(--accent,#818cf8);font-weight:600}
+.total{background:var(--card,#27272a);border:1px solid var(--border,#3f3f46);border-radius:8px;padding:10px 14px;margin:8px 0 16px;display:inline-block}
+.total strong{color:var(--accent,#818cf8)}
+.section{margin:14px 0 6px}
+.grid{display:flex;gap:6px;flex-wrap:wrap}
+.badge{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.badge.philosophy{background:#6366f1;color:#fff}
+.badge.science{background:#10b981;color:#fff}
+.badge.esoteric{background:#8b5cf6;color:#fff}
+.badge.polymath{background:#f59e0b;color:#fff}
+.badge.ingestion{background:#3b82f6;color:#fff}
+.badge.generation{background:#ec4899;color:#fff}
+.badge.transformation{background:#14b8a6;color:#fff}
+.badge.quality{background:#ef4444;color:#fff}
+.badge.orchestration{background:#8b5cf6;color:#fff}
+table{width:100%;border-collapse:collapse;margin:6px 0}
+th{text-align:left;color:var(--muted-foreground,#a1a1aa);font-size:11px;font-weight:500;padding:3px 6px;border-bottom:1px solid var(--border,#3f3f46)}
+td{padding:3px 6px;border-bottom:1px solid var(--border,#3f3f46)}
+td.val{color:var(--foreground,#e4e4e7)}
+.opposition{color:#fbbf24;font-size:11px;margin:6px 0 0}
+.arrow{color:var(--muted-foreground,#a1a1aa)}
+</style>
+<body><div class=container>
+
+<h1>📊 CaptN — 20 Thinkers + 20 Workers</h1>
+<p class=sub>Couverture complète : mathématiques, physique, chimie, alchimie, code + philosophie</p>
+
+<div class=total>
+  <strong>Thinkers:</strong> 20  ·  <strong>Workers:</strong> 20  ·  <strong>Domain Routes:</strong> 68  ·  <strong>Opposition Mode:</strong> ✓
+</div>
+
+<h2>🧠 Thinkers (by domain)</h2>
+
+<table>
+<tr><th style="width:100px">Domaine</th><th>Thinkers</th><th style="width:50px">#</th></tr>
+<tr><td><span class="badge philosophy">Philosophy</span></td><td>Socrates, Plato, Aristotle, Confucius, Descartes, Kant, Nietzsche, Locke, Philosophers</td><td class=val>9</td></tr>
+<tr><td><span class="badge science">Science</span></td><td>Einstein <span class=arrow>→</span> physics · Newton <span class=arrow>→</span> physics_math · Curie <span class=arrow>→</span> physics_chemistry · Pythagoras <span class=arrow>→</span> math_philosophy · Mathematicians · Physicists · Chemists · Scientists</td><td class=val>8</td></tr>
+<tr><td><span class="badge esoteric">Esoteric</span></td><td>Alchimie <span class=arrow>→</span> alchemy, transmutation</td><td class=val>1</td></tr>
+<tr><td><span class="badge polymath">Polymath</span></td><td>Leonardo da Vinci · Alan Turing <span class=arrow>→</span> computation, AI, crypto</td><td class=val>2</td></tr>
+</table>
+
+<p class=opposition>✦ Opposition system : si le distributeur choisit un physicien, il ajoute un philosophe — et inversement.</p>
+
+<h2>⚙️ Workers (by specialisation)</h2>
+
+<table>
+<tr><th style="width:100px">Spécialisation</th><th>Workers</th><th style="width:50px">#</th></tr>
+<tr><td><span class="badge ingestion">Data Ingestion</span></td><td>crawler, raw2json, raw2json_worker, extractor</td><td class=val>4</td></tr>
+<tr><td><span class="badge generation">Code Generation</span></td><td>autogen, deterministic_coder, polyglot_coder, fix_generator, pgm_worker, <strong style=color:#f472b6>code_backend_worker</strong> <span class=arrow>→</span> metrics, style, security</td><td class=val>6</td></tr>
+<tr><td><span class="badge transformation">Transformation</span></td><td>normalizer, translator, diversifier_worker, <strong style=color:#14b8a6>math_validation_worker</strong> <span class=arrow>→</span> équations, dimensionnel, <strong style=color:#14b8a6>chemistry_validation_worker</strong> <span class=arrow>→</span> formules, réactions</td><td class=val>5</td></tr>
+<tr><td><span class="badge quality">Quality</span></td><td>validator, no_repetition_worker, <strong style=color:#ef4444>diversity_checker_worker</strong> <span class=arrow>→</span> détection biais/répétition</td><td class=val>3</td></tr>
+<tr><td><span class="badge orchestration">Orchestration</span></td><td>distributor <span class=arrow>→</span> scoring + opposition mode, <strong style=color:#8b5cf6>opposition_router</strong> <span class=arrow>→</span> sélection opposée délibérée</td><td class=val>2</td></tr>
+</table>
+
+<h2>🔀 Distribution intelligente</h2>
+
+<table>
+<tr><th>Sujet</th><th>Sélection normale</th><th>Avec opposition</th></tr>
+<tr><td>quantum physics</td><td>physicists, einstein, newton</td><td>einstein, physicists, newton + <strong style=color:#fbbf24>aristotle</strong></td></tr>
+<tr><td>mathematics equation algebra</td><td>mathematicians, pythagoras, turing</td><td><span class=arrow>→</span> 3 math + 1 philosophie</td></tr>
+<tr><td>chemical reaction molecule</td><td>chemists, curie, alchimie</td><td><span class=arrow>→</span> 2 chimie + 1 philosophie</td></tr>
+<tr><td>programming algorithm</td><td>turing, mathematicians, leonardo</td><td><span class=arrow>→</span> 2 computation + 1 philosophie</td></tr>
+</table>
+
+<h2>📂 Arborescence</h2>
+
+<pre style="font-size:12px;color:var(--foreground,#e4e4e7);line-height:1.6">
+<span class=dir>captn/thinkers/</span>
+├── base.py
+├── philosophy/    <span class=arrow>── 9 thinkers</span>
+├── science/       <span class=arrow>── 8 thinkers (NEW: Pythagoras, Curie, Newton)</span>
+├── esoteric/      <span class=arrow>── 1 thinker</span>
+└── polymath/      <span class=arrow>── 2 thinkers (NEW: Alan Turing)</span>
+
+<span class=dir>captn/workers/</span>
+├── data_ingestion/    <span class=arrow>── 4</span>
+├── code_generation/   <span class=arrow>── 6 (NEW: code_backend_worker)</span>
+├── transformation/    <span class=arrow>── 5 (NEW: math_validation, chemistry_validation)</span>
+├── quality/           <span class=arrow>── 3 (NEW: diversity_checker_worker)</span>
+└── orchestration/     <span class=arrow>── 2 (NEW: opposition_router, distributor opposition mode)</span>
+</pre>
+
+</div></body></html>

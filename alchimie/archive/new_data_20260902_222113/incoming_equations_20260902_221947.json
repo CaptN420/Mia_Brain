@@ -1,0 +1,128 @@
+{
+  "rules": [
+    {
+      "id": "equation.ndot____k___a___δc_____1___s_eff__d.v1",
+      "name": "Ndot = (k * A * ΔC) * (1 - S_eff) D",
+      "type": "transformation",
+      "domain": "general",
+      "definition": "Equation approuvee par debat MIA",
+      "unit": "",
+      "measure": "",
+      "role": "",
+      "links": [
+        "Ndot = (k * A * ΔC) * (1 - S_eff) D"
+      ],
+      "status": "candidate",
+      "experimental": true,
+      "version": "1.0.0",
+      "source": "mia_debate",
+      "description": "Ndot = (k * A * ΔC) * (1 - S_eff) D",
+      "constraints": [],
+      "validation": {
+        "tested": false,
+        "tests": []
+      },
+      "family": "general",
+      "micro_equation": "Ndot = (k * A * ΔC) * (1 - S_eff) D",
+      "experiment": "",
+      "approved": false,
+      "source_turn": 0,
+      "source_agent": "MIA",
+      "validation_summary": "Equation: Ndot = (k * A * ΔC) * (1 - S_eff) D",
+      "source_session": "alchemy_session_20260902_221944"
+    },
+    {
+      "id": "equation.ndot____k___a___δc_____1___s_eff__raison.v1",
+      "name": "Ndot = (k * A * ΔC) * (1 - S_eff) Raisons",
+      "type": "transformation",
+      "domain": "general",
+      "definition": "Equation approuvee par debat MIA",
+      "unit": "",
+      "measure": "",
+      "role": "",
+      "links": [
+        "Ndot = (k * A * ΔC) * (1 - S_eff) Raisons"
+      ],
+      "status": "candidate",
+      "experimental": true,
+      "version": "1.0.0",
+      "source": "mia_debate",
+      "description": "Ndot = (k * A * ΔC) * (1 - S_eff) Raisons",
+      "constraints": [],
+      "validation": {
+        "tested": false,
+        "tests": []
+      },
+      "family": "general",
+      "micro_equation": "Ndot = (k * A * ΔC) * (1 - S_eff) Raisons",
+      "experiment": "",
+      "approved": false,
+      "source_turn": 0,
+      "source_agent": "MIA",
+      "validation_summary": "Equation: Ndot = (k * A * ΔC) * (1 - S_eff) Raisons",
+      "source_session": "alchemy_session_20260902_221944"
+    },
+    {
+      "id": "equation.j____d_eff___δc___l_____l___r__d.v1",
+      "name": "J = (D_eff * ΔC / L) / (L + R) D",
+      "type": "transformation",
+      "domain": "general",
+      "definition": "Equation approuvee par debat MIA",
+      "unit": "",
+      "measure": "",
+      "role": "",
+      "links": [
+        "J = (D_eff * ΔC / L) / (L + R) D"
+      ],
+      "status": "candidate",
+      "experimental": true,
+      "version": "1.0.0",
+      "source": "mia_debate",
+      "description": "J = (D_eff * ΔC / L) / (L + R) D",
+      "constraints": [],
+      "validation": {
+        "tested": false,
+        "tests": []
+      },
+      "family": "general",
+      "micro_equation": "J = (D_eff * ΔC / L) / (L + R) D",
+      "experiment": "",
+      "approved": false,
+      "source_turn": 0,
+      "source_agent": "MIA",
+      "validation_summary": "Equation: J = (D_eff * ΔC / L) / (L + R) D",
+      "source_session": "alchemy_session_20260902_221944"
+    },
+    {
+      "id": "equation.ndot____k___a___b____beta____k___2_raiso.v1",
+      "name": "Ndot = (k * A * B) - beta * (k)**2 Raisons",
+      "type": "transformation",
+      "domain": "general",
+      "definition": "Equation approuvee par debat MIA",
+      "unit": "",
+      "measure": "",
+      "role": "",
+      "links": [
+        "Ndot = (k * A * B) - beta * (k)**2 Raisons"
+      ],
+      "status": "candidate",
+      "experimental": true,
+      "version": "1.0.0",
+      "source": "mia_debate",
+      "description": "Ndot = (k * A * B) - beta * (k)**2 Raisons",
+      "constraints": [],
+      "validation": {
+        "tested": false,
+        "tests": []
+      },
+      "family": "general",
+      "micro_equation": "Ndot = (k * A * B) - beta * (k)**2 Raisons",
+      "experiment": "",
+      "approved": false,
+      "source_turn": 0,
+      "source_agent": "MIA",
+      "validation_summary": "Equation: Ndot = (k * A * B) - beta * (k)**2 Raisons",
+      "source_session": "alchemy_session_20260902_221944"
+    }
+  ]
+}

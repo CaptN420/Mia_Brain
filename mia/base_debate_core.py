@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import inspect
+import random
 import re
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -11,6 +12,24 @@ from shared_memory import SharedResearchMemory
 from prompt_guard import prompt_injection_guardrails, sanitize_items, sanitize_untrusted_text, wrap_untrusted_block
 from action_monitor import SecurityStop, inspect_agent_output, log_effect
 from themes import random_theme
+
+# Import deterministic CaptN pipeline — 20+ mutations, signature fine, pas de répétition
+try:
+    from captn.workers.transformation.diversifier_worker import (
+        DiversifierWorker as _CaptnDiversifier,
+        MUTATION_REGISTRY as _MUTATION_REGISTRY,
+        structure_signature as _structure_signature,
+    )
+    _CAPTN_AVAILABLE = True
+except ImportError:
+    _CAPTN_AVAILABLE = False
+
+# Import system prompts
+try:
+    from prompts import SYSTEM_PROMPT, GLOBAL_TOOLBOX, STEP_TOOLBOXES, ROLE_TOOLBOXES
+    _PROMPTS_AVAILABLE = True
+except ImportError:
+    _PROMPTS_AVAILABLE = False
 
 
 def _build_md_field_re(field_name: str) -> re.Pattern:
@@ -164,6 +183,16 @@ class BaseDebateCore:
             "Reviseur": "Révision de complétude déterministe.",
         }.get(speaker, f"Proposition déterministe ({speaker}).")
         parts = [f"Agent : {speaker}", f"Tour : {turn}", f"Cadre : {framing}"]
+
+        # Ajouter la toolbox de l'étape et du rôle
+        if _PROMPTS_AVAILABLE:
+            step_tb = STEP_TOOLBOXES.get(self.debate_kind, "")
+            if step_tb:
+                parts.append("TOOLBOX ÉTAPE:\n" + step_tb[:600])
+            role_tb = ROLE_TOOLBOXES.get(speaker, "")
+            if role_tb:
+                parts.append("TOOLBOX RÔLE:\n" + role_tb[:600])
+
         # Inject captn thinkers/workers knowledge (deterministic pipeline)
         if self.captn_bridge is not None:
             try:
@@ -347,11 +376,32 @@ class BaseDebateCore:
     def _compose_prompt(self, speaker: str) -> str:
         theme = sanitize_untrusted_text(self.theme, max_chars=600)
         question = sanitize_untrusted_text(self.question, max_chars=900)
+        step_toolbox = sanitize_untrusted_text(
+            (STEP_TOOLBOXES.get(self.debate_kind, "") if _PROMPTS_AVAILABLE else ""),
+            max_chars=1200,
+        )
+        role_toolbox = sanitize_untrusted_text(
+            (ROLE_TOOLBOXES.get(speaker, "") if _PROMPTS_AVAILABLE else ""),
+            max_chars=1200,
+        )
+        system = sanitize_untrusted_text(
+            (SYSTEM_PROMPT if _PROMPTS_AVAILABLE else ""),
+            max_chars=2000,
+        )
+        toolbox = sanitize_untrusted_text(
+            (GLOBAL_TOOLBOX if _PROMPTS_AVAILABLE else ""),
+            max_chars=1000,
+        )
         return "\n\n".join([
             prompt_injection_guardrails(),
+            system,
             wrap_untrusted_block("THEME", theme),
             wrap_untrusted_block("QUESTION", question),
             f"Agent : {speaker}",
+            f"Étape : {self.debate_kind}",
+            toolbox,
+            step_toolbox,
+            role_toolbox,
         ])
 
     def _turn_metric_key(self) -> str:
@@ -681,12 +731,6 @@ class BaseDebateCore:
                 ],
             ),
         ]
-        eq_variants = [
-            "Ndot = k * A * ΔC",
-            "Ndot = J * A",
-            "Ndot = (D_eff * A * ΔC) / L",
-            "Ndot = (k * A * ΔC) / (1 + alpha * ΔC)",
-        ]
 
         if self.debate_kind == "variable":
             symbol, family, definition, unit, measure, role, links = var_variants[(turn - 1) % len(var_variants)]
@@ -703,7 +747,27 @@ class BaseDebateCore:
             )
 
         if self.debate_kind == "equation":
-            eq = eq_variants[(turn - 1) % len(eq_variants)]
+            # Utiliser le CaptN DiversifierWorker pour générer des équations VARIÉES
+            eq = "Ndot = k * A * ΔC"  # fallback
+            if _CAPTN_AVAILABLE:
+                try:
+                    dw = _CaptnDiversifier()
+                    # 3 parents × 15 mutations × 4 variations = 180 équations uniques
+                    base_eqs = [
+                        "Ndot = k * A * ΔC",
+                        "J = D_eff * ΔC / L",
+                        "Ndot = k * A * B",
+                    ]
+                    phase = (turn - 1) % 3
+                    parent = base_eqs[phase]
+                    variation = ((turn - 1) // 3) % 4
+                    # seed = turn garantit un ordre différent à chaque tour
+                    # On prend TOUJOURS l'index 0 (premier après shuffle)
+                    mutations = dw.mutate(parent, shuffle=True, variation=variation, seed=turn)
+                    if mutations:
+                        eq = mutations[0]
+                except Exception:
+                    pass
             return (
                 "Statut : nouvelle\n"
                 "Objet calculé : débit net de transfert\n"
@@ -720,6 +784,20 @@ class BaseDebateCore:
             )
 
         if self.debate_kind == "mutation":
+            # Utiliser le CaptN DiversifierWorker pour générer une mutation VARIÉE
+            child = "Ndot = J * A - pertes"
+            parent = str(self.state.get("parent_equation", "") or "").strip()
+            if not parent:
+                parent = "Ndot = J * A"
+            if _CAPTN_AVAILABLE:
+                try:
+                    dw = _CaptnDiversifier()
+                    variation = ((turn - 1) // 3) % 4
+                    mutations = dw.mutate(parent, shuffle=True, variation=variation, seed=turn)
+                    if mutations:
+                        child = mutations[0]
+                except Exception:
+                    pass
             return (
                 "Statut : nouvelle\n"
                 "Élément repris : équation parent\n"
@@ -729,7 +807,7 @@ class BaseDebateCore:
                 "Objet calculé : débit net de transfert muté\n"
                 "Type de loi : mutation structurée\n"
                 "Architecture choisie : parent + limitation visible\n"
-                "Équation : Ndot = J * A - pertes\n"
+                f"Équation : {child}\n"
                 "Définitions :\n"
                 "- Ndot : débit net de transfert\n"
                 "- A : surface d'échange active\n"

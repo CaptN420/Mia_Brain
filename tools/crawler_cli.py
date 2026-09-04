@@ -63,7 +63,7 @@ def _load_dotenv_local() -> None:
 
 _load_dotenv_local()
 
-from captn.workers.crawler import GitHubCrawler, RateLimitError, CrawlError  # noqa: E402
+from captn.workers.data_ingestion.crawler import GitHubCrawler, RateLimitError, CrawlError  # noqa: E402
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -146,7 +146,7 @@ def main(argv: list[str] | None = None) -> int:
 
         learn_stats = None
         if args.learn and not args.dry_run and result.dataset_jsonl:
-            from captn.workers.crawler import merge_dataset_into_corpus
+            from captn.workers.data_ingestion.crawler import merge_dataset_into_corpus
             try:
                 learn_stats = merge_dataset_into_corpus(result.dataset_jsonl, corpus_dir)
             except Exception as le:

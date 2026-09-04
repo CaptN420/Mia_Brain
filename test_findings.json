@@ -1,0 +1,32 @@
+[
+  {
+    "plugin": "syntax_worker",
+    "valid": true,
+    "payload": {
+      "task_id": "analysis_123",
+      "current_step_plugin": "syntax_worker",
+      "valid": true,
+      "result": {
+        "worker_name": "syntax_worker",
+        "status": "success",
+        "findings": []
+      }
+    }
+  },
+  {
+    "plugin": "bug_worker",
+    "valid": true,
+    "payload": {
+      "task_id": "analysis_123",
+      "current_step_plugin": "bug_worker",
+      "valid": true,
+      "result": {
+        "worker_name": "bug_worker",
+        "status": "warning",
+        "findings": [
+          "Potential security risk (eval/exec) in /home/user/project/module.py"
+        ]
+      }
+    }
+  }
+]

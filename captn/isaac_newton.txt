@@ -1,0 +1,15 @@
+1. Isaac Newton - Formulated the three laws of motion forming the foundation of classical mechanics: inertia, F=ma, action-reaction.
+2. Isaac Newton - Discovered universal gravitation (F = G*m1*m2/r²), proving that the same force governs falling apples and orbiting planets.
+3. Isaac Newton - Developed calculus (independently from Leibniz), providing the mathematical language for continuous change and physics.
+4. Isaac Newton - Discovered that white light is composed of all colors of the spectrum, refrangible at different angles through prisms.
+5. Isaac Newton - Built the first reflecting telescope (Newtonian telescope), eliminating chromatic aberration of refractors.
+6. Isaac Newton - Published Philosophiæ Naturalis Principia Mathematica, the single most influential work in physics and mathematics.
+7. Isaac Newton - Formulated the law of cooling describing the rate of heat transfer proportional to temperature difference.
+8. Isaac Newton - Developed the binomial theorem for non-integer exponents, a fundamental result in combinatorics and analysis.
+9. Isaac Newton - Discovered the generalized power series expansion, a precursor to Taylor and Maclaurin series.
+10. Isaac Newton - Established the relationship between potential and kinetic energy through the vis viva principle.
+11. Isaac Newton - Derived Kepler's laws of planetary motion from first principles of gravitation and mechanics.
+12. Isaac Newton - Developed the theory of fluid dynamics including Newtonian viscosity and the concept of drag proportional to velocity².
+13. Isaac Newton - Formulated the principle of least action in optics, anticipating Lagrangian mechanics by a century.
+14. Isaac Newton - Discovered the relationship between orbital period and orbital radius for bodies under gravitational attraction (Kepler's third law derived).
+15. Isaac Newton - Established the wave-particle duality of light through his corpuscular theory and observation of Newton's rings.

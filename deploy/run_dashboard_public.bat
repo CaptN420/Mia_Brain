@@ -9,17 +9,17 @@
 @echo off
 cd /d "%~dp0.."
 
-REM --- Token is mandatory for public mode -----------------------------------
-if "%CAPTN_AUTH_TOKEN%"=="" (
-    if exist ".captn\auth_token" (
-        echo Using token from .captn\auth_token
+REM --- Passphrase is mandatory for public mode -------------------------------
+if "%CAPTN_AUTH_PASSPHRASE%"=="" (
+    if exist ".captn\auth_passphrase" (
+        echo Using passphrase from .captn\auth_passphrase
     ) else (
-        echo ERROR: no access token configured.
+        echo ERROR: no access passphrase configured.
         echo   Generate one with:
         echo     python -c "import secrets; print(secrets.token_urlsafe(32))"
         echo   then either:
-        echo     set CAPTN_AUTH_TOKEN=<the-token>
-        echo   or save it to .captn\auth_token
+        echo     set CAPTN_AUTH_PASSPHRASE=<the-passphrase>
+        echo   or save it to .captn\auth_passphrase
         pause
         exit /b 1
     )

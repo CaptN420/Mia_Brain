@@ -1,0 +1,14 @@
+{
+  "schema_version": "captn.crawler.dataset/1.0",
+  "source": "raw",
+  "root": "/home/tintin/Desktop/workspace/Mia_Brain/CaptN-BRAIN-main/wd-40",
+  "converted_at": "2026-09-01T18:04:29.392892Z",
+  "record_count": 25,
+  "languages": {
+    "python": 25
+  },
+  "extensions": {
+    ".py": 25
+  },
+  "note": "Structured JSON produced from raw local files by captn.workers.raw2json."
+}

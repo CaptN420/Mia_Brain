@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random
 import re
 from typing import Dict, List, Tuple
 
@@ -7,6 +8,16 @@ from equation_debate_orchestrator import EquationDebateOrchestrator
 from prompt_guard import prompt_injection_guardrails, wrap_untrusted_block, sanitize_untrusted_text
 from prompts import MUTATION_PROMPT, get_agent_prompt
 from shared_memory import SharedResearchMemory
+
+# Importer le pipeline déterministe CaptN (20+ mutations)
+try:
+    from captn.workers.transformation.diversifier_worker import (
+        DiversifierWorker as _CaptnDiversifier,
+        MUTATION_REGISTRY as _MUTATION_REGISTRY,
+    )
+    _CAPTN_AVAILABLE = True
+except ImportError:
+    _CAPTN_AVAILABLE = False
 
 _PARENT_RE = re.compile(r"^\s*Parent\s*:\s*(.+)$", re.IGNORECASE | re.MULTILINE)
 _OBJECT_RE = re.compile(r"^\s*Objet calculé\s*:\s*(.+)$", re.IGNORECASE | re.MULTILINE)
@@ -192,11 +203,13 @@ class MutationEquationOrchestrator(EquationDebateOrchestrator):
             chosen = str(recs[0].get("name", "") or "").strip().lower()
             reason = str(recs[0].get("hint", "") or recs[0].get("label", "") or "").strip()
         if not chosen:
-            for key in ["resistance", "saturation", "loss", "geometry", "time", "coupling"]:
-                if key in MECHANISM_LIBRARY:
-                    chosen = key
-                    reason = "fallback mécanisme"
-                    break
+            # Sélection ALÉATOIRE parmi les mécanismes disponibles (résout ordre fixe)
+            mechanisms = list(MECHANISM_LIBRARY.keys())
+            turn = int(self.state.get("turn", 1))
+            random.seed(turn)  # déterministe par tour, mais change à chaque tour
+            random.shuffle(mechanisms)
+            chosen = mechanisms[0]
+            reason = f"tour {turn} — sélection aléatoire"
         meta = MECHANISM_LIBRARY.get(chosen, {})
         self.state["target_mechanism"] = chosen
         self.state["target_mechanism_term"] = str(meta.get("term", "") or "")
@@ -419,18 +432,39 @@ class MutationEquationOrchestrator(EquationDebateOrchestrator):
         return f"{lhs} = {enriched_rhs}"
 
     def _build_deterministic_child_from_parent(self, parent: str) -> str:
+        """Génère une équation fille VARIÉE à partir du parent.
+
+        Utilise le CaptN DiversifierWorker (20+ mutations) pour produire
+        une mutation structurellement distincte à chaque tour.
+        """
         lhs, rhs = self._split_equation(parent)
-        low = rhs.lower()
         if self._is_blankish(parent):
             return ""
-        if "(1 + r)" not in low and "/(1+r)" not in low and " / (1 + r)" not in low:
+
+        # Priorité CaptN : 20+ mutations
+        if _CAPTN_AVAILABLE:
+            try:
+                dw = _CaptnDiversifier()
+                mutations = dw.mutate(parent, shuffle=True)
+                if mutations:
+                    turn = int(self.state.get("turn", 1)) or 1
+                    idx = (turn - 1) % len(mutations)
+                    return mutations[idx]
+            except Exception:
+                pass
+
+        # Fallback : 4 variantes (mieux que l'ancien code qui en faisait 1)
+        low = rhs.lower()
+        if "/(1" not in low:
             return f"{lhs} = ({rhs}) / (1 + R)"
-        if "s_eff" not in low and "(1-s_eff)" not in low and "(1 - s_eff)" not in low:
+        if "s_eff" not in low:
             return f"{lhs} = ({rhs}) * (1 - S_eff)"
         if "pertes" not in low and "loss" not in low:
             return f"{lhs} = {rhs} - pertes"
         if "beta" not in low:
             return f"{lhs} = ({rhs}) / (1 + beta)"
+        if "tau" not in low:
+            return f"{lhs} = ({rhs}) * exp(-t / tau)"
         return f"{lhs} = ({rhs}) * (1 - S_eff)"
 
     # ---------------------------------------------------------

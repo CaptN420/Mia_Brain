@@ -159,6 +159,33 @@ class MirrorAgent:
             "evidence_support": round(evidence_support, 2)
         }
         
+    def process_hypothesis(self, hypothesis: str, task_id: str = "cli") -> Dict[str, Any]:
+        """Public entry point for CLI/busless use.
+
+        Runs the full mirror pipeline (generate → validate → score)
+        and returns the result payload directly, without requiring a Message bus.
+        """
+        # Gather mirror transformations from Alchimie if available
+        mirror_transformations = []
+        if self.alchimie_manager and hasattr(self.alchimie_manager, 'find_rules'):
+            mirror_transformations = self.alchimie_manager.find_rules(
+                domain=None, rule_type="mirror", status="experimental"
+            )
+
+        mirrored_reasoning = self._generate_mirrored_reasoning(hypothesis, mirror_transformations)
+        validation_result = self._validate_mirror_operation(hypothesis, mirrored_reasoning)
+        mirror_score = self._calculate_mirror_score(mirrored_reasoning, validation_result)
+
+        return {
+            "task_id": task_id,
+            "original_hypothesis": hypothesis,
+            "mirrored_reasoning": mirrored_reasoning,
+            "validation_result": validation_result,
+            "mirror_score": mirror_score,
+            "status": "success",
+            "mirror_transformations_used": [t.get('id') for t in mirror_transformations],
+        }
+
     def shutdown(self) -> bool:
         """Shutdown the MirrorAgent."""
         logger.info(f"[{self.name}] Shutting down MirrorAgent...")

@@ -181,7 +181,7 @@ def test_fallback_proposal_drops_unknown_fields():
 
 def test_fix_generator_template_is_honest(tmp_path, monkeypatch):
     """H-05: generated fix is a template that refuses to claim success."""
-    from captn.workers.fix_generator import FixGenerator
+    from captn.workers.code_generation.fix_generator import FixGenerator
 
     published = []
 

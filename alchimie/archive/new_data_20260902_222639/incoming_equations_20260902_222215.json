@@ -1,0 +1,35 @@
+{
+  "rules": [
+    {
+      "id": "equation.ndot___τ_raisons.v1",
+      "name": "Ndot = τ Raisons",
+      "type": "transformation",
+      "domain": "general",
+      "definition": "Equation approuvee par debat MIA",
+      "unit": "",
+      "measure": "",
+      "role": "",
+      "links": [
+        "Ndot = τ Raisons"
+      ],
+      "status": "candidate",
+      "experimental": true,
+      "version": "1.0.0",
+      "source": "mia_debate",
+      "description": "Ndot = τ Raisons",
+      "constraints": [],
+      "validation": {
+        "tested": false,
+        "tests": []
+      },
+      "family": "general",
+      "micro_equation": "Ndot = τ Raisons",
+      "experiment": "",
+      "approved": false,
+      "source_turn": 0,
+      "source_agent": "MIA",
+      "validation_summary": "Equation: Ndot = τ Raisons",
+      "source_session": "alchemy_session_20260902_222213"
+    }
+  ]
+}

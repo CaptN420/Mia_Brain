@@ -76,3 +76,15 @@
 [daemon] FINDING [weird] NEW on network: [13816] ollama app.exe  <-- UNFAMILIAR
 [notify] (toast unavailable) wd-40 Shield ALERT: 11 finding(s): NEW on network: [6048] ollama.exe  <-- UNFAMILIAR
 [daemon] tick clean @ 2026-08-27T06:11:24.472305+00:00
+[daemon] wd-40 scanner loop start 2026-08-27T15:16:10.364133+00:00 interval=300s
+[daemon] FINDING [weird] NEW on network: [896] wininit.exe  <-- UNFAMILIAR
+[daemon] FINDING [weird] NEW on network: [3656] spoolsv.exe  <-- UNFAMILIAR
+[daemon] FINDING [weird] NEW on network: [4572] ollama.exe  <-- UNFAMILIAR
+[daemon] FINDING [weird] NEW on network: [9152] ollama app.exe  <-- UNFAMILIAR
+[daemon] FINDING [weird] NEW on network: [1908] llama-server.exe  <-- UNFAMILIAR
+[daemon] FINDING [weird] NEW on network: [4912] msedge.exe  <-- UNFAMILIAR
+[daemon] FINDING [weird] NEW on network: [11748] python.exe  <-- UNFAMILIAR
+[daemon] tick clean @ 2026-08-27T15:26:21.354508+00:00
+[daemon] FINDING [weird] NEW on network: [328] python.exe  <-- UNFAMILIAR
+[daemon] FINDING [weird] NEW on network: [2300] msedge.exe  <-- UNFAMILIAR
+[daemon] FINDING [weird] NEW on network: [12804] llama-server.exe  <-- UNFAMILIAR

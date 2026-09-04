@@ -1,0 +1,105 @@
+<html>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:transparent;color:var(--foreground,#e4e4e7);font-family:var(--font,ui-monospace,'Cascadia Code','Fira Code',monospace);font-size:13px;line-height:1.5;padding:20px}
+h1{font-size:20px;font-weight:700;margin-bottom:4px;color:var(--accent,#818cf8)}
+h2{font-size:14px;font-weight:600;margin:20px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--border,#3f3f46)}
+h2.code{border-color:#ec4899}
+h2.math{border-color:#14b8a6}
+h2.data{border-color:#3b82f6}
+.sub{color:var(--muted-foreground,#a1a1aa);font-size:12px;margin-bottom:12px}
+.warn{background:#1a1a2e;border:1px solid #fef08a;border-radius:8px;padding:10px 14px;margin:12px 0;color:#fef08a;font-size:12px}
+.warn strong{color:#fde047}
+.pipeline{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px;align-items:center}
+.step{background:var(--card,#27272a);border:1px solid var(--border,#3f3f46);border-radius:6px;padding:5px 10px;font-size:12px;white-space:nowrap}
+.step.code{background:linear-gradient(135deg,#1e1a2e,#2a1a3e);border-color:#ec4899}
+.step.math{background:linear-gradient(135deg,#0a2e2a,#0a3e3a);border-color:#14b8a6}
+.step.data{background:linear-gradient(135deg,#0a1a3e,#0a2a4e);border-color:#3b82f6}
+.arrow{color:var(--muted-foreground,#a1a1aa);font-size:16px;margin:0 2px}
+.pill{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;margin:0 4px}
+.pill.code{background:#ec4899;color:#fff}
+.pill.math{background:#14b8a6;color:#fff}
+.pill.data{background:#3b82f6;color:#fff}
+table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}
+th{text-align:left;color:var(--muted-foreground,#a1a1aa);font-weight:500;padding:4px 8px;border-bottom:1px solid var(--border,#3f3f46)}
+td{padding:4px 8px;border-bottom:1px solid var(--border,#3f3f46)}
+td.name{font-weight:600}
+td.code{color:#f472b6}
+td.math{color:#2dd4bf}
+td.data{color:#60a5fa}
+</style>
+<body>
+
+<h1>🧩 CaptN — Architecture : 3 Pipelines Indépendantes</h1>
+<p class=sub>autogen = génération de CODE · MirrorAgent = validation d'ÉQUATIONS · complètement séparés</p>
+
+<div class=warn>
+<strong>⚠️ Pourquoi tu vois des équations dans les logs ?</strong><br>
+Quand le dashboard démarre, il lance le <strong>Captn runtime</strong> qui initialise <em>tous</em> les composants — y compris MirrorAgent + MathValidator (pour la librairie Alchimie).<br>
+Ces logs <code>Ndot = J * A</code> viennent du <strong>MirrorAgent</strong> qui valide des transformations mathématiques. <strong>Ils n'ont rien à voir avec autogen</strong> qui ne touche qu'à du code Python.
+</div>
+
+<h2 class=code>🔵 Pipeline 1 — Code Generation (autogen + workers)</h2>
+<div class=pipeline>
+<span class="step code">dataset JSONL<br><span style=font-size:10px;color:#a1a1aa>(crawled Python files)</span></span>
+<span class=arrow>→</span>
+<span class="step code">DeterministicCoder<br><span style=font-size:10px;color:#a1a1aa>AST transforms (no LLM)</span></span>
+<span class=arrow>→</span>
+<span class="step code">LLM fallback<br><span style=font-size:10px;color:#a1a1aa>Ollama qwen2:1.5b</span></span>
+<span class=arrow>→</span>
+<span class="step code">PatchValidator<br><span style=font-size:10px;color:#a1a1aa>safety gates</span></span>
+<span class=arrow>→</span>
+<span class="step code">BehavioralEquiv<br><span style=font-size:10px;color:#a1a1aa>AST structure check</span></span>
+<span class=arrow>→</span>
+<span class="step code">*.gen.py<br><span style=font-size:10px;color:#a1a1aa>generated/</span></span>
+</div>
+<table>
+<tr><th>Worker</th><th>Rôle</th><th>Type</th></tr>
+<tr><td class=name>autogen</td><td>Loop principal : dataset → code généré (déterministe puis LLM)</td><td><span class="pill code">CODE</span></td></tr>
+<tr><td class=name>deterministic_coder</td><td>Transformations AST pures : docstrings, annotations, normalisation</td><td><span class="pill code">CODE</span></td></tr>
+<tr><td class=name>polyglot_coder</td><td>Génération multi-langage (C, JS, Go, Rust…) — templates, pas de LLM</td><td><span class="pill code">CODE</span></td></tr>
+<tr><td class=name>code_backend_worker</td><td>Métriques, style, sécurité, suppression imports inutilisés</td><td><span class="pill code">CODE</span></td></tr>
+<tr><td class=name>fix_generator</td><td>Génère des scaffolds fix.py à partir d'erreurs PGM</td><td><span class="pill code">CODE</span></td></tr>
+<tr><td class=name>pgm_worker</td><td>Système PGM rule-based pour suggestions de correction</td><td><span class="pill code">CODE</span></td></tr>
+</table>
+
+<h2 class=math>🟢 Pipeline 2 — Math / Alchimie (MirrorAgent + MathValidator)</h2>
+<div class=pipeline>
+<span class="step math">Alchimie lib<br><span style=font-size:10px;color:#a1a1aa>rules.json</span></span>
+<span class=arrow>→</span>
+<span class="step math">MathValidator<br><span style=font-size:10px;color:#a1a1aa>classifie transformations</span></span>
+<span class=arrow>→</span>
+<span class="step math">MirrorAgent<br><span style=font-size:10px;color:#a1a1aa>miroir, inversion, symétrie</span></span>
+<span class=arrow>→</span>
+<span class="step math">Validation<br><span style=font-size:10px;color:#a1a1aa>VALID_STANDARD_MATH / EXPERIMENTAL</span></span>
+</div>
+<table>
+<tr><th>Composant</th><th>Rôle</th><th>Type</th></tr>
+<tr><td class=name>MirrorAgent</td><td>Transforme le raisonnement par symétrie/inversion/opposition</td><td><span class="pill math">ÉQUATIONS</span></td></tr>
+<tr><td class=name>MathValidator</td><td>Valide les transformations mathématiques (classification STANDARD / EXPERIMENTAL / CONTRADICTORY)</td><td><span class="pill math">ÉQUATIONS</span></td></tr>
+<tr><td class=name>AlchimieLibraryManager</td><td>Librairie de règles de transformation (fichiers JSON)</td><td><span class="pill math">ÉQUATIONS</span></td></tr>
+</table>
+<div class=warn style="border-color:#2dd4bf;color:#2dd4bf">
+<strong>💡 C'est ici que les logs Ndot = J * A apparaissent.</strong><br>
+Le MirrorAgent reçoit des messages de type "mirror" et appelle MathValidator pour classifier. 
+Rien à voir avec autogen — c'est un système de <strong>raisonnement mathématique symbolique</strong> pour la librairie Alchimie.
+</div>
+
+<h2 class=data>🔴 Pipeline 3 — Data Ingestion (crawler, raw2json, extractor…)</h2>
+<table>
+<tr><th>Worker</th><th>Rôle</th><th>Type</th></tr>
+<tr><td class=name>crawler</td><td>Récupère du code open-source depuis GitHub</td><td><span class="pill data">DATA</span></td></tr>
+<tr><td class=name>raw2json</td><td>Transforme des fichiers locaux en JSONL structuré</td><td><span class="pill data">DATA</span></td></tr>
+<tr><td class=name>extractor</td><td>Lit des fichiers depuis le filesystem</td><td><span class="pill data">DATA</span></td></tr>
+<tr><td class=name>normalizer / translator</td><td>Nettoie et reformate le contenu</td><td><span class="pill data">DATA</span></td></tr>
+</table>
+
+<h2 style="margin-top:28px">🎯 Résumé</h2>
+<table>
+<tr><th>Pipeline</th><th>Couleur</th><th>Entrée</th><th>Sortie</th><th>Workers</th></tr>
+<tr><td><strong>Code Generation</strong></td><td><span class="pill code">CODE</span></td><td>dataset JSONL (Python)</td><td>*.gen.py</td><td>6</td></tr>
+<tr><td><strong>Math / Alchimie</strong></td><td><span class="pill math">ÉQUATIONS</span></td><td>transformations symboliques</td><td>validations / mirrored reasoning</td><td>3</td></tr>
+<tr><td><strong>Data Ingestion</strong></td><td><span class="pill data">DATA</span></td><td>fichiers / GitHub</td><td>dataset JSONL structuré</td><td>4</td></tr>
+</table>
+
+</body></html>

@@ -5,6 +5,7 @@ Usage (double-click safe - no 'import'/'from' at module top beyond stdlib):
     python tools/raw2json_cli.py <root> [--out-dir DIR] [--ext .py,.rst]
                                   [--max-bytes N] [--max-files N]
                                   [--feed [CORPUS_DIR]] [--no-dataset] [--json]
+                                  [--mirror-and-delete]
 
 Examples:
     # Convert Code_base into Code_base/_converted/dataset.jsonl
@@ -13,10 +14,16 @@ Examples:
     # Only Python + RST, and feed the result into the learning corpus
     python tools/raw2json_cli.py Code_base --ext .py,.rst --feed Code_base
 
+    # Convert, mirror, and delete originals
+    python tools/raw2json_cli.py Code_base --mirror-and-delete
+
 Security notes:
     - Read-only scan; never executes or writes inside the scanned tree.
     - Output is written to <root>/_converted unless --out-dir is given.
     - --feed merges into a corpus dir (default Code_base) via sha256 dedup.
+    - --mirror-and-delete creates a mirror dataset in <out_dir>/_mirrored/
+      then removes the original files. The mirror applies deterministic AST
+      transforms to Python code and structural inversion to other text.
 """
 from __future__ import annotations
 
@@ -46,6 +53,8 @@ def _build_parser() -> argparse.ArgumentParser:
                    help="merge the result into a corpus dir (default: Code_base)")
     p.add_argument("--no-dataset", action="store_true",
                    help="do not write dataset files (in-memory only)")
+    p.add_argument("--mirror-and-delete", action="store_true",
+                   help="mirror content + create mirror dataset, then delete source files")
     p.add_argument("--json", action="store_true", help="emit JSON result to stdout")
     return p
 
@@ -55,7 +64,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # Lazy import keeps the CLI runnable without the full captn package if needed.
     try:
-        from captn.workers.raw2json import convert_raw_directory
+        from captn.workers.data_ingestion.raw2json import convert_raw_directory
     except ImportError as e:
         sys.stderr.write(f"[raw2json] import error: {e}\n")
         return 3
@@ -77,6 +86,7 @@ def main(argv: list[str] | None = None) -> int:
             max_bytes=args.max_bytes,
             max_files=args.max_files,
             export_dataset=not args.no_dataset,
+            mirror_and_delete=args.mirror_and_delete,
         )
     except Exception as e:
         sys.stderr.write(f"[raw2json] failed: {type(e).__name__}: {e}\n")
@@ -86,11 +96,15 @@ def main(argv: list[str] | None = None) -> int:
           f"skipped={len(result.files_skipped)} errors={len(result.errors)}")
     if result.dataset_jsonl:
         print(f"[raw2json] dataset: {result.dataset_jsonl}")
+    if result.files_deleted:
+        print(f"[raw2json] deleted: {len(result.files_deleted)} source files")
+    if result.mirror_dataset_jsonl:
+        print(f"[raw2json] mirror dataset: {result.mirror_dataset_jsonl}")
 
     feed_msg = ""
     if args.feed:
         try:
-            from captn.workers.crawler import merge_dataset_into_corpus
+            from captn.workers.data_ingestion.crawler import merge_dataset_into_corpus
             stats = merge_dataset_into_corpus(result.dataset_jsonl, args.feed)
             feed_msg = (f" | corpus: +{stats['added']} (dup {stats['duplicates']}, "
                         f"now {stats['added'] + stats['existing']})")
@@ -104,8 +118,10 @@ def main(argv: list[str] | None = None) -> int:
             "root": result.root,
             "included": len(result.files_included),
             "skipped": len(result.files_skipped),
+            "deleted": len(result.files_deleted),
             "errors": len(result.errors),
             "dataset_jsonl": result.dataset_jsonl,
+            "mirror_dataset_jsonl": result.mirror_dataset_jsonl,
             "manifest": result.manifest,
         }, indent=2))
     return 0

@@ -67,7 +67,7 @@ class CaptnBridge:
         except Exception as exc:  # pragma: no cover
             print(f"[BRIDGE] captn Thinker indisponible: {type(exc).__name__}: {exc}")
         try:
-            from captn.runtime.math_validator import MathValidator  # noqa: E402
+            from tools.math_validator import MathValidator  # noqa: E402
             self.math_validator = MathValidator()
             self.available = True
         except Exception as exc:

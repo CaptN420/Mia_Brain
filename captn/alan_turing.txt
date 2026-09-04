@@ -1,0 +1,15 @@
+1. Alan Turing - Founded theoretical computer science by formalizing the Turing machine model of computation.
+2. Alan Turing - Established the Church-Turing thesis: any effectively computable function is computable by a Turing machine.
+3. Alan Turing - Defined the halting problem and proved it is undecidable, founding computability theory.
+4. Alan Turing - Broke the Enigma cipher at Bletchley Park, developing the bombe electromechanical decryption machine.
+5. Alan Turing - Designed the Automatic Computing Engine (ACE), one of the earliest stored-program computer designs.
+6. Alan Turing - Published "Computing Machinery and Intelligence" proposing the Turing Test as a criterion for machine intelligence.
+7. Alan Turing - Developed the concept of universal machine: a single machine that can simulate any other machine given the right program.
+8. Alan Turing - Pioneered morphogenesis by showing that simple reaction-diffusion equations explain pattern formation in biological organisms.
+9. Alan Turing - Formulated Turing complete systems: a system that can simulate any Turing machine is capable of arbitrary computation.
+10. Alan Turing - Developed the Banburismus statistical method for reducing the search space in cryptanalysis of naval Enigma.
+11. Alan Turing - Designed the Pilot ACE computer at the National Physical Laboratory, a practical realization of stored-program computing.
+12. Alan Turing - Established the theoretical foundation for artificial neural networks and machine learning through his universal approximation concepts.
+13. Alan Turing - Formulated the Entscheidungsproblem (decision problem) resolution, proving there are problems that no algorithm can solve.
+14. Alan Turing - Developed the concept of oracle machines extending Turing machines with external black-box queries (hypercomputation).
+15. Alan Turing - Created the Turing reduction: a problem A is Turing-reducible to B if there exists an algorithm using B that solves A.

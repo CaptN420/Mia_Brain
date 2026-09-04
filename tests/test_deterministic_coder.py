@@ -7,7 +7,7 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from captn.workers.deterministic_coder import DeterministicCoder
+from captn.workers.code_generation.deterministic_coder import DeterministicCoder
 
 
 @pytest.fixture
@@ -55,7 +55,7 @@ def test_equivalence_gate_blocks_rewrites(coder):
     bad = "def f(x):\n    return x + 1\n"
     ok_patch = coder.generate(bad)
     # even if generation succeeds it must be equivalent; simulate failure:
-    from captn.workers.autogen import behaviorally_equivalent
+    from captn.workers.code_generation.autogen import behaviorally_equivalent
     if ok_patch[0] is not None:
         assert behaviorally_equivalent(bad, ok_patch[0])
 

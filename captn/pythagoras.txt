@@ -1,0 +1,15 @@
+1. Pythagoras - Discovered the fundamental theorem relating sides of a right triangle (a² + b² = c²), founding the field of geometry.
+2. Pythagoras - Established the Pythagorean school of mathematics, blending rigorous proof with mystical number theory.
+3. Pythagoras - Discovered irrational numbers through the diagonal of a unit square, revealing limits of rational arithmetic.
+4. Pythagoras - Developed the concept of mathematical proof as deductive reasoning from first principles.
+5. Pythagoras - Formulated the theory of proportions that later influenced Euclid's Elements and all of Western mathematics.
+6. Pythagoras - Discovered the harmonic series and the mathematical ratios underlying musical intervals (octave 2:1, fifth 3:2, fourth 4:3).
+7. Pythagoras - Established the tetractys (1+2+3+4=10) as a sacred symbol representing the harmony of the cosmos.
+8. Pythagoras - Developed early number theory distinguishing odd, even, prime, and perfect numbers.
+9. Pythagoras - Discovered the five regular solids (tetrahedron, cube, octahedron, dodecahedron, icosahedron) and their geometric properties.
+10. Pythagoras - Introduced the concept of mathematical abstraction: numbers as entities independent of physical objects.
+11. Pythagoras - Established the distinction between discrete (arithmetic) and continuous (geometry) magnitude.
+12. Pythagoras - Developed the theory of figurate numbers (triangular, square, pentagonal) forming the foundation of combinatorial mathematics.
+13. Pythagoras - Influenced Plato's theory of Forms by arguing mathematical truths exist in an ideal realm beyond physical observation.
+14. Pythagoras - Discovered the geometric mean, arithmetic mean, and harmonic mean, establishing the theory of means.
+15. Pythagoras - Pioneered the idea that the universe is fundamentally mathematical, that "all things are numbers."

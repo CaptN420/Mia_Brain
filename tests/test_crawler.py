@@ -16,7 +16,7 @@ from unittest import mock
 
 import pytest
 
-from captn.workers.crawler import (
+from captn.workers.data_ingestion.crawler import (
     CrawlError,
     CrawlerWorker,
     GitHubCrawler,

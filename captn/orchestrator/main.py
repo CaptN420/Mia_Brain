@@ -76,7 +76,7 @@ def main():
 
     # Optional crawler worker (networked). Non-fatal if requests is missing.
     try:
-        from captn.workers.crawler import CrawlerWorker  # safe import
+        from captn.workers.data_ingestion.crawler import CrawlerWorker  # safe import
         crawler = CrawlerWorker(bus)
         if crawler.initialize():
             manager.register_plugin(crawler)
@@ -85,7 +85,7 @@ def main():
 
     # Raw -> structured JSON worker (local files). Non-fatal if module missing.
     try:
-        from captn.workers.raw2json_worker import Raw2JsonWorker  # safe import
+        from captn.workers.data_ingestion.raw2json_worker import Raw2JsonWorker  # safe import
         raw2json_w = Raw2JsonWorker(bus)
         if raw2json_w.initialize():
             manager.register_plugin(raw2json_w)

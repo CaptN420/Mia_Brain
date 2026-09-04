@@ -12,13 +12,15 @@ import unittest
 import sys
 import os
 
-# Add the captn directory to the path to import modules
-project_root = os.path.dirname(os.path.abspath(__file__))
-captn_path = os.path.join(project_root, '..', 'captn')
+# Add both project root and captn directory to the path to import modules
+project_root = os.path.dirname(os.path.abspath(__file__))  # tests/
+root_path = os.path.join(project_root, '..')                # project root
+captn_path = os.path.join(root_path, 'captn')
+sys.path.insert(0, root_path)
 sys.path.insert(0, captn_path)
 
-from runtime.mirror_rules import MirrorRules
-from runtime.math_validator import MathValidator
+from captn.runtime.mirror_rules import MirrorRules
+from tools.math_validator import MathValidator
 
 
 class TestMirrorTransformation(unittest.TestCase):

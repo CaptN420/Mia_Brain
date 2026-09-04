@@ -7,7 +7,7 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from captn.workers.crawler import dedup_corpus, merge_dataset_into_corpus
+from captn.workers.data_ingestion.crawler import dedup_corpus, merge_dataset_into_corpus
 
 
 def _rec(content, path, sha=None):

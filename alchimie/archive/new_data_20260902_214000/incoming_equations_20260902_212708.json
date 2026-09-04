@@ -1,0 +1,97 @@
+{
+  "rules": [
+    {
+      "id": "equation.ndot___j_raisons.v1",
+      "name": "Ndot = J Raisons",
+      "type": "transformation",
+      "domain": "general",
+      "definition": "Equation approuvee par debat MIA",
+      "unit": "",
+      "measure": "",
+      "role": "",
+      "links": [
+        "Ndot = J Raisons"
+      ],
+      "status": "candidate",
+      "experimental": true,
+      "version": "1.0.0",
+      "source": "mia_debate",
+      "description": "Ndot = J Raisons",
+      "constraints": [],
+      "validation": {
+        "tested": false,
+        "tests": []
+      },
+      "family": "general",
+      "micro_equation": "Ndot = J Raisons",
+      "experiment": "",
+      "approved": false,
+      "source_turn": 0,
+      "source_agent": "MIA",
+      "validation_summary": "Equation: Ndot = J Raisons",
+      "source_session": "alchemy_session_20260902_212707"
+    },
+    {
+      "id": "equation.ndot___j___j_d.v1",
+      "name": "Ndot = J * J D",
+      "type": "transformation",
+      "domain": "general",
+      "definition": "Equation approuvee par debat MIA",
+      "unit": "",
+      "measure": "",
+      "role": "",
+      "links": [
+        "Ndot = J * J D"
+      ],
+      "status": "candidate",
+      "experimental": true,
+      "version": "1.0.0",
+      "source": "mia_debate",
+      "description": "Ndot = J * J D",
+      "constraints": [],
+      "validation": {
+        "tested": false,
+        "tests": []
+      },
+      "family": "general",
+      "micro_equation": "Ndot = J * J D",
+      "experiment": "",
+      "approved": false,
+      "source_turn": 0,
+      "source_agent": "MIA",
+      "validation_summary": "Equation: Ndot = J * J D",
+      "source_session": "alchemy_session_20260902_212707"
+    },
+    {
+      "id": "equation.ndot___j___j_raison.v1",
+      "name": "Ndot = J * J Raison",
+      "type": "transformation",
+      "domain": "general",
+      "definition": "Equation approuvee par debat MIA",
+      "unit": "",
+      "measure": "",
+      "role": "",
+      "links": [
+        "Ndot = J * J Raison"
+      ],
+      "status": "candidate",
+      "experimental": true,
+      "version": "1.0.0",
+      "source": "mia_debate",
+      "description": "Ndot = J * J Raison",
+      "constraints": [],
+      "validation": {
+        "tested": false,
+        "tests": []
+      },
+      "family": "general",
+      "micro_equation": "Ndot = J * J Raison",
+      "experiment": "",
+      "approved": false,
+      "source_turn": 0,
+      "source_agent": "MIA",
+      "validation_summary": "Equation: Ndot = J * J Raison",
+      "source_session": "alchemy_session_20260902_212707"
+    }
+  ]
+}
