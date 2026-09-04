@@ -32,7 +32,7 @@ def _norm(eq: str) -> str:
 def _extract_vars(eq: str) -> List[str]:
     """Extrait les symboles d'une équation, en ignorant Ndot et les mots courts."""
     syms = re.findall(r"[A-Za-z_ΔτφηκμρσλΦΨχΩα-ω][A-Za-z0-9_ΔτφηκμρσλΦΨχΩα-ω]*", str(eq or ""))
-    reserved = {"Ndot", "exp", "log", "sin", "cos", "tan", "sqrt", "abs"}
+    reserved = {"Ndot", "exp", "log", "sin", "cos", "tan", "sqrt", "abs", "S_eff"}
     return [s for s in syms if s not in reserved and len(s) <= 12]
 
 
@@ -190,7 +190,8 @@ class DiversifierWorker:
                 continue
             if tok in self.approved_symbols or not self.approved_symbols:
                 kept.append(tok)
-            elif len(tok) <= 3 and tok.replace("_", "").isalnum():
+            elif len(tok) <= 12 and tok.replace("_", "").isalnum():
+                # Keep any variable-like token (up to 12 chars, like S_eff, D_eff, K_m)
                 kept.append(tok)
         cleaned = " ".join(t for t in kept if t.strip())
         return re.sub(r"\s+", " ", cleaned).strip()
@@ -437,7 +438,7 @@ class DiversifierWorker:
             template = m["template"]
             if template:
                 # Vérifier si le template apparaît dans la variante (simplifié)
-                tmpl_compact = _norm(template.format(rhs="", main="", other=[""], L="", R="", tau="", t="", Ea="", T="", ΔC="", K_m="", K="", beta=""))
+                tmpl_compact = _norm(template.format(rhs="", main="", other=[""], L="", R="", tau="", t="", Ea="", T="", ΔC="", K_m="", K="", beta="", S_eff="", k=""))
                 if tmpl_compact and tmpl_compact in v_compact:
                     return m["label"]
 
