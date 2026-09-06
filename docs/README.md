@@ -1,53 +1,50 @@
-# CaptN-BRAIN
+# CaptN-BRAIN Documentation
 
-> *When one AI has an idea, another criticizes it, a third repairs it, a fourth mutates it, and a fifth archives it for posterity.*
+> Navigation guide for the CaptN-BRAIN documentation.
 
-**CaptN-BRAIN** is a **deterministic-first multi-agent runtime** for symbolic research, code generation, data ingestion, quality analysis, and multi-perspective reasoning.
+## Token Input Optimization
 
-The core design principle: **tools and deterministic generators run first, validators gate deterministically, and the LLM is only a last-resort fallback.**
+The token optimization stack comprises four layers built sequentially:
 
-This repository bundles four cooperating subsystems:
+| # | Layer | File | Phase | Purpose |
+|---|-------|------|-------|---------|
+| 1 | **Token Profiler** | `captn/runtime/hermes_profiler.py` | 1.5 | Observation-only measurement of every context component |
+| 2 | **Token Gap Analyzer** | `captn/runtime/token_gap.py` | 1.6 | Reconcile local estimates vs OpenRouter actual tokens |
+| 3 | **Context Budget** | `captn/runtime/context_budget.py` | 2 | Relevance-based selection within fixed 30K token limits |
+| 4 | **Adaptive Manager** | `captn/runtime/adaptive_manager.py` | 3 | Dynamic budget allocation by deterministic complexity analysis |
 
-| Subsystem | Path | Purpose |
-|-----------|------|---------|
-| **CaptN** | `captn/` | Deterministic agent runtime: orchestrator, workers, thinkers, bus, plugins |
-| **MIA** | `mia/` | Multi-Agent Intelligence Alchemy: symbolic equation debate & evolution |
-| **Alchimie** | `alchimie/` | Transformation rule library (archive, backup, schema) |
-| `wd-40/` | Watchdog/shield safety layer (daemon, quarantine, sandbox, netcheck, filecheck, tray) |
+**Full reference:** [`TOKEN_INPUT_OPTIMIZATION.md`](TOKEN_INPUT_OPTIMIZATION.md) — architecture diagrams, CLI commands, Python API, field reference, and benchmark results.
 
-Plus standalone tools in `tools/`, deployment configs in `deploy/`, and the test suite in `tests/`.
+## CLI Reference
 
----
-
-## Philosophy
-
-Most AI agent systems call an LLM for **every** step — routing, validation, planning, generation, summarization. Each call burns tokens, costs money, adds latency, and introduces non-determinism.
-
-CaptN-BRAIN inverts this: **solve everything you can with deterministic code first.** Only when deterministic tools cannot produce an answer does the system fall back to an LLM — and even then, it prefers a local model (Ollama) over a cloud API.
-
-This gives you:
-
-- **Deterministic outputs** — same input always produces the same output
-- **Zero token consumption** for most operations
-- **Auditable decisions** — routing and validation are explicit rules, not model "opinions"
-- **Privacy** — most processing stays on your machine
-- **Lower latency** — deterministic operations return in milliseconds, not seconds
-
----
-
-## Quick start
+All token optimization commands are under `devtools`:
 
 ```bash
-pip install -r requirements.txt
-cp .env.example .env                    # edit if needed (optional)
-python -m mia.launcher_ollama          # launch the MIA orchestrator
-python -m captn.dashboard.app          # launch the Captn dashboard (optional)
+python summon_agents.py devtools budget status|demo|telemetry
+python summon_agents.py devtools adaptive status|demo
+python summon_agents.py devtools hermes_profile records|csv|demo
+python summon_agents.py devtools gap report
+python summon_agents.py devtools reconcile records|report
 ```
 
-LLM backend defaults to **Ollama** at `localhost:11434` with **qwen2:1.5b**. No API key required. The system works deterministically even without an LLM.
+## Test Suites
 
----
+| Suite | Tests | File |
+|-------|-------|------|
+| Context Budget (base) | 15 | `tools/test_context_budget.py` |
+| Context Budget (hardening) | 15 | `tools/test_context_budget_hardening.py` |
+| Budget Telemetry | 11 | `tools/test_budget_telemetry.py` |
+| Hermes Profile | 12 | `tools/test_hermes_profile.py` |
+| Token Profiler | 19 | `tools/test_token_profiler.py` |
+| Token Gap | 10 | `tools/test_token_gap.py` |
+| Reconcile | 12 | `tools/test_reconcile.py` |
+| Adaptive Manager | 22 | `tools/test_adaptive_manager.py` |
+| **Total** | **106** | — |
 
-## License
+## Quick Links
 
-See `LICENSE` and `CITATION.cff`.
+- [ROADMAP.md](../ROADMAP.md) — Project roadmap (Phase 1→6)
+- [README.md](../README.md) — Top-level project overview
+- [SECURITY.md](../SECURITY.md) — Secrets and token security
+- [DOCKER.md](../DOCKER.md) — Docker deployment
+- [CONTRIBUTING.md](../CONTRIBUTING.md) — Contribution guidelines

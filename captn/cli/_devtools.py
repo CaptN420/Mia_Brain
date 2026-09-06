@@ -36,16 +36,20 @@ def register_cli(subparsers) -> None:
     p = subparsers.add_parser(
         "devtools",
         help="Developer tools (code analysis, linting, AST diff, etc.)",
-        description="""
-Developer tools — AST-based code analysis, linting, import optimization,
+        description="""Developer tools — AST-based code analysis, linting, import optimization,
 context extraction, and structural diffs. All deterministic, no LLM.
 
 Subcommands:
-  codechunk    Découper un fichier en chunks fonction/classe
-  imports      Analyse et optimisation des imports Python
-  context      Extraire le contexte local d'un fichier Python
-  lint         Linter Python structuré
-  diff-ast     Diff structurel AST entre deux fichiers
+  codechunk        Découper un fichier en chunks fonction/classe
+  imports          Analyse et optimisation des imports Python
+  context          Extraire le contexte local d'un fichier Python
+  lint             Linter Python structuré
+  diff-ast         Diff structurel AST entre deux fichiers
+  token_profile    CaptN-BRAIN token profiler (observation only)
+  hermes_profile   Hermes production token profiler (pre_api_request hook)
+  gap              Investigate token gap (64k heuristic vs 150k actual)
+  reconcile        Reconcile local tokenizer vs OpenRouter actual usage
+  budget           Context Budget — relevance-based selection within token limits
 """,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -86,5 +90,53 @@ Subcommands:
         logger.debug("Loaded devtools subcommand: diff-ast")
     except Exception as exc:
         logger.warning("devtools diff-ast not available: %s", exc)
+
+    # Token Profiler — observation-only; captures per-component token attribution
+    try:
+        from captn.runtime.token_profiler import register_cli as _reg_tokprof
+        _reg_tokprof(dev_sub)
+        logger.debug("Loaded devtools subcommand: token_profile")
+    except Exception as exc:
+        logger.warning("devtools token_profile not available: %s", exc)
+
+    # Hermes Production Profiler — hooks into pre_api_request lifecycle
+    try:
+        from captn.runtime.hermes_profiler import register_cli as _reg_hermesprof
+        _reg_hermesprof(dev_sub)
+        logger.debug("Loaded devtools subcommand: hermes_profile")
+    except Exception as exc:
+        logger.warning("devtools hermes_profile not available: %s", exc)
+
+    # Gap Investigation — diagnostic for 64k vs 150k discrepancy
+    try:
+        from captn.runtime.token_gap import register_cli as _reg_gap
+        _reg_gap(dev_sub)
+        logger.debug("Loaded devtools subcommand: gap")
+    except Exception as exc:
+        logger.warning("devtools gap not available: %s", exc)
+
+    # OpenRouter Token Reconciliation — reconcile local vs provider token counts
+    try:
+        from captn.runtime.reconcile import register_cli as _reg_reconcile
+        _reg_reconcile(dev_sub)
+        logger.debug("Loaded devtools subcommand: reconcile")
+    except Exception as exc:
+        logger.warning("devtools reconcile not available: %s", exc)
+
+    # Context Budget — relevance-based selection within token limits
+    try:
+        from captn.runtime.context_budget import register_cli as _reg_budget
+        _reg_budget(dev_sub)
+        logger.debug("Loaded devtools subcommand: budget")
+    except Exception as exc:
+        logger.warning("devtools budget not available: %s", exc)
+
+    # Adaptive Context Manager — dynamic budget allocation
+    try:
+        from captn.runtime.adaptive_manager import register_cli as _reg_adaptive
+        _reg_adaptive(dev_sub)
+        logger.debug("Loaded devtools subcommand: adaptive")
+    except Exception as exc:
+        logger.warning("devtools adaptive not available: %s", exc)
 
     p.set_defaults(func=_cmd_devtools)
